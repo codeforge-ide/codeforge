@@ -34,7 +34,7 @@ class CodeEditorState extends State<CodeEditor> {
     _codeController = CodeController(
       text: editorState.content,
       language: _languageMap[editorState.language] ?? dart,
-      theme: monokaiSublimeTheme,
+      patternMap: monokaiSublimeTheme,
       webSpaceFix: true,
     );
   }
@@ -56,7 +56,7 @@ class CodeEditorState extends State<CodeEditor> {
         _codeController = CodeController(
           text: oldContent,
           language: _languageMap[newLanguage] ?? dart,
-          theme: monokaiSublimeTheme,
+          patternMap: monokaiSublimeTheme,
           webSpaceFix: true,
         );
       });

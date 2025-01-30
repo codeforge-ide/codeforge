@@ -32,10 +32,9 @@ class AIPaneState extends State<AIPane> {
     });
 
     try {
-      final aiService = context.read<AIService>();
-      final modelNames = await aiService.getAvailableModels();
+      final modelList = await context.read<AIService>().getAvailableModels();
       setState(() {
-        _models = modelNames.map((name) => AIModel(name: name)).toList();
+        _models = modelList;
         _isLoading = false;
       });
     } catch (e) {
