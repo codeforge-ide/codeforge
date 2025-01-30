@@ -6,26 +6,24 @@ class ThemeService extends ChangeNotifier {
   String _fontFamily = 'JetBrains Mono';
 
   static final darkTheme = ThemeData.dark().copyWith(
-    useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blue,
       brightness: Brightness.dark,
     ),
     textTheme: Typography.material2021().white.copyWith(
-          bodyMedium: TextStyle(fontFamily: 'JetBrains Mono'),
-          bodyLarge: TextStyle(fontFamily: 'JetBrains Mono'),
+          bodyMedium: const TextStyle(fontFamily: 'JetBrains Mono'),
+          bodyLarge: const TextStyle(fontFamily: 'JetBrains Mono'),
         ),
   );
 
   static final lightTheme = ThemeData.light().copyWith(
-    useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blue,
       brightness: Brightness.light,
     ),
     textTheme: Typography.material2021().black.copyWith(
-          bodyMedium: TextStyle(fontFamily: 'JetBrains Mono'),
-          bodyLarge: TextStyle(fontFamily: 'JetBrains Mono'),
+          bodyMedium: const TextStyle(fontFamily: 'JetBrains Mono'),
+          bodyLarge: const TextStyle(fontFamily: 'JetBrains Mono'),
         ),
   );
 

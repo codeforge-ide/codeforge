@@ -28,7 +28,6 @@ class CodeforgeApp extends StatelessWidget {
     return MaterialApp(
       title: 'Codeforge',
       theme: ThemeData.dark().copyWith(
-        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,

@@ -6,7 +6,6 @@ import 'package:highlight/languages/dart.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:highlight/languages/javascript.dart';
 import '../models/editor_state.dart';
-import '../utils/language_utils.dart';
 
 class CodeEditor extends StatefulWidget {
   const CodeEditor({super.key});
@@ -35,7 +34,6 @@ class CodeEditorState extends State<CodeEditor> {
       text: editorState.content,
       language: _languageMap[editorState.language] ?? dart,
       patternMap: monokaiSublimeTheme,
-      webSpaceFix: true,
     );
   }
 
@@ -57,7 +55,6 @@ class CodeEditorState extends State<CodeEditor> {
           text: oldContent,
           language: _languageMap[newLanguage] ?? dart,
           patternMap: monokaiSublimeTheme,
-          webSpaceFix: true,
         );
       });
     }

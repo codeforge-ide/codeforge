@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 
 class ProjectState extends ChangeNotifier {
   String _projectPath = '';
-  List<String> _openFiles = [];
+  final List<String> _openFiles = [];
   String? _activeFile;
-  Map<String, bool> _fileChangeStatus = {};
+  final Map<String, bool> _fileChangeStatus = {};
 
   String get projectPath => _projectPath;
   List<String> get openFiles => List.unmodifiable(_openFiles);
