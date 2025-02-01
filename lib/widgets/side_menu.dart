@@ -10,7 +10,7 @@ class SideMenu extends StatelessWidget {
         children: [
           DrawerHeader(
               child: Text("Main Menu",
-                  style: Theme.of(context).textTheme.headline6)),
+                  style: Theme.of(context).textTheme.titleLarge)),
           ExpansionTile(
             title: const Text("File"),
             children: const [
