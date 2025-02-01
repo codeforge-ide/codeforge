@@ -38,7 +38,7 @@ class CodeforgeApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         textTheme: ThemeData.dark()
             .textTheme
-            .apply(fontSizeFactor: 0.8), // smaller texts
+            .apply(fontSizeDelta: -2.0), // using fontSizeDelta instead
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,
