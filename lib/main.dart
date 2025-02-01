@@ -7,15 +7,19 @@ import '../widgets/source_control_pane.dart';
 import '../widgets/side_menu.dart';
 import '../widgets/bottom_panel.dart';
 import '../widgets/command_palette.dart';
+import '../widgets/resizable_split_view.dart';
+import '../widgets/workspace_drop_area.dart';
 import '../models/editor_state.dart';
 import '../services/ai_service.dart';
 import '../services/source_control_service.dart';
+import '../services/workspace_service.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => EditorState()),
+        ChangeNotifierProvider(create: (_) => WorkspaceService()),
         Provider(create: (_) => AIService()),
         Provider(create: (_) => SourceControlService()),
       ],
@@ -32,6 +36,9 @@ class CodeforgeApp extends StatelessWidget {
     return MaterialApp(
       title: 'Codeforge',
       theme: ThemeData.dark().copyWith(
+        textTheme: ThemeData.dark()
+            .textTheme
+            .apply(fontSizeFactor: 0.8), // smaller texts
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,
@@ -58,6 +65,12 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _handleFileDrop(List<String> paths) {
+    // In a real app, you may use more robust detection and load workspaces accordingly.
+    Provider.of<WorkspaceService>(context, listen: false)
+        .addWorkspace(paths.first);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
@@ -80,97 +93,74 @@ class _MainScreenState extends State<MainScreen> {
               Consumer<EditorState>(
                 builder: (context, state, _) => Text(
                   state.filename + (state.isDirty ? '*' : ''),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
             ],
           ),
         ),
         drawer: const SideMenu(),
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth > 1200) {
-                        return const WideLayout();
-                      } else if (constraints.maxWidth > 800) {
-                        return const MediumLayout();
-                      } else {
-                        return const NarrowLayout();
-                      }
-                    },
+        body: WorkspaceDropArea(
+          onDrop: _handleFileDrop,
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        if (constraints.maxWidth > 1200) {
+                          // Wide layout: nest two resizable split views.
+                          return ResizableSplitView(
+                            orientation: SplitViewOrientation.horizontal,
+                            initialRatio: 0.6,
+                            first: const CodeEditor(),
+                            second: ResizableSplitView(
+                              orientation: SplitViewOrientation.horizontal,
+                              initialRatio: 0.5,
+                              first: const AIPane(),
+                              second: const SourceControlPane(),
+                            ),
+                          );
+                        } else if (constraints.maxWidth > 800) {
+                          // Medium layout: two panels stacked horizontally.
+                          return ResizableSplitView(
+                            orientation: SplitViewOrientation.horizontal,
+                            initialRatio: 0.5,
+                            first: const CodeEditor(),
+                            second: ResizableSplitView(
+                              orientation: SplitViewOrientation.vertical,
+                              initialRatio: 0.5,
+                              first: const AIPane(),
+                              second: const SourceControlPane(),
+                            ),
+                          );
+                        } else {
+                          // Narrow layout: stacked vertically.
+                          return Column(
+                            children: const [
+                              Expanded(child: CodeEditor()),
+                              Divider(height: 1),
+                              Expanded(child: AIPane()),
+                              Divider(height: 1),
+                              Expanded(child: SourceControlPane()),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                   ),
-                ),
-                BottomPanel(onCommandPalette: _toggleCommandPalette),
-              ],
-            ),
-            if (_showCommandPalette)
-              CommandPalette(
-                onClose: _toggleCommandPalette,
+                  BottomPanel(onCommandPalette: _toggleCommandPalette),
+                ],
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class WideLayout extends StatelessWidget {
-  const WideLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(flex: 3, child: CodeEditor()),
-        VerticalDivider(),
-        Expanded(flex: 1, child: AIPane()),
-        VerticalDivider(),
-        Expanded(flex: 1, child: SourceControlPane()),
-      ],
-    );
-  }
-}
-
-class MediumLayout extends StatelessWidget {
-  const MediumLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(flex: 2, child: CodeEditor()),
-        const VerticalDivider(),
-        Expanded(
-          child: Column(
-            children: const [
-              Expanded(child: AIPane()),
-              Divider(),
-              Expanded(child: SourceControlPane()),
+              if (_showCommandPalette)
+                CommandPalette(
+                  onClose: _toggleCommandPalette,
+                ),
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-class NarrowLayout extends StatelessWidget {
-  const NarrowLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        Expanded(child: CodeEditor()),
-        Divider(),
-        Expanded(child: AIPane()),
-        Divider(),
-        Expanded(child: SourceControlPane()),
-      ],
+      ),
     );
   }
 }
