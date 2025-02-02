@@ -13,6 +13,7 @@ import '../models/editor_state.dart';
 import '../services/ai_service.dart';
 import '../services/source_control_service.dart';
 import '../services/workspace_service.dart';
+import 'dense_text_theme.dart'; // import the dense text theme
 
 void main() {
   runApp(
@@ -33,12 +34,11 @@ class CodeforgeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final darkTheme = ThemeData.dark();
     return MaterialApp(
       title: 'Codeforge',
-      theme: ThemeData.dark().copyWith(
-        textTheme: ThemeData.dark()
-            .textTheme
-            .apply(fontSizeDelta: -2.0), // using fontSizeDelta instead
+      theme: darkTheme.copyWith(
+        textTheme: getDenseTextTheme(darkTheme.textTheme, delta: 2.0),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,
