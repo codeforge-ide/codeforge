@@ -1,3 +1,4 @@
+import 'package:codeforge/theme/dense_text_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +14,6 @@ import '../models/editor_state.dart';
 import '../services/ai_service.dart';
 import '../services/source_control_service.dart';
 import '../services/workspace_service.dart';
-import 'dense_text_theme.dart'; // import the dense text theme
 
 void main() {
   runApp(
