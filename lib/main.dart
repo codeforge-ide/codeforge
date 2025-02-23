@@ -13,6 +13,7 @@ import '../models/editor_state.dart';
 import '../services/ai_service.dart';
 import '../services/source_control_service.dart';
 import '../services/workspace_service.dart';
+import '../theme/dense_text_theme.dart';
 
 void main() {
   runApp(
