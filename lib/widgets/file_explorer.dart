@@ -251,3 +251,99 @@ class FileExplorerState extends State<FileExplorer> {
                           ),
                         ],
                       ),
+                      onTap: _refreshWorkspace,
+                    ),
+                    ..._buildFileTree(_entities, ''),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        if (_isLoading) const LoadingOverlay(),
+      ],
+    );
+  }
+
+  List<Widget> _buildFileTree(List<FileSystemEntity> entities, String basePath) {
+    final widgets = <Widget>[];
+    
+    for (final entity in entities) {
+      final relativePath = basePath.isEmpty ? 
+          entity.path.split('/').last : 
+          '$basePath/${entity.path.split('/').last}';
+      
+      final fileName = entity.path.split('/').last;
+      
+      // Skip hidden files if not showing them
+      if (!_showHiddenFiles && fileName.startsWith('.')) {
+        continue;
+      }
+      
+      if (entity is Directory) {
+        final isExpanded = _expandedFolders[entity.path] ?? false;
+        
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.only(left: basePath.isEmpty ? 0 : 16.0),
+            child: ListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              leading: Icon(
+                isExpanded ? Icons.folder_open : Icons.folder,
+                size: 16,
+                color: Colors.amber,
+              ),
+              title: Text(fileName, overflow: TextOverflow.ellipsis),
+              onTap: () => _toggleFolderExpand(entity.path),
+              trailing: const Icon(Icons.arrow_right, size: 16),
+            ),
+          ),
+        );
+        
+        if (isExpanded) {
+          // Recursively load directory contents when expanded
+          try {
+            final childEntities = entity.listSync();
+            childEntities.sort((a, b) {
+              final aIsDir = a is Directory;
+              final bIsDir = b is Directory;
+              if (aIsDir && !bIsDir) return -1;
+              if (!aIsDir && bIsDir) return 1;
+              return a.path.compareTo(b.path);
+            });
+            
+            widgets.addAll(_buildFileTree(childEntities, relativePath));
+          } catch (e) {
+            widgets.add(
+              Padding(
+                padding: EdgeInsets.only(left: basePath.isEmpty ? 16.0 : 32.0),
+                child: ListTile(
+                  title: Text('Error: $e', style: const TextStyle(color: Colors.red)),
+                ),
+              ),
+            );
+          }
+        }
+      } else if (entity is File) {
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.only(left: basePath.isEmpty ? 0 : 16.0),
+            child: ListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              leading: Text(
+                LanguageUtils.getFileIcon(fileName),
+                style: const TextStyle(fontSize: 16),
+              ),
+              title: Text(fileName, overflow: TextOverflow.ellipsis),
+              onTap: () => _openFile(entity.path),
+            ),
+          ),
+        );
+      }
+    }
+    
+    return widgets;
+  }
+}
+

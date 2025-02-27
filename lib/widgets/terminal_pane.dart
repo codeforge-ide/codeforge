@@ -17,6 +17,8 @@ class TerminalPaneState extends State<TerminalPane> {
   Process? _process;
   bool _isLoading = false;
   String? _error;
+  final TextEditingController _controller = TextEditingController();
+  final List<String> _output = [];
 
   @override
   void initState() {
@@ -161,6 +163,30 @@ class TerminalPaneState extends State<TerminalPane> {
                 fontFamily: 'monospace',
               ),
             ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              const Text('> ', style: TextStyle(fontWeight: FontWeight.bold)),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: const TextStyle(fontFamily: 'JetBrains Mono'),
+                  onSubmitted: (value) {
+                    setState(() {
+                      _output.add(value);
+                      _controller.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ],
