@@ -79,7 +79,7 @@ class EditorTabBar extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         )),
                   InkWell(
-                    onTap: (e) => tabManager.closeTab(index),
+                    onTap: () => tabManager.closeTab(index),
                     child: const Icon(Icons.close, size: 16),
                   ),
                 ],

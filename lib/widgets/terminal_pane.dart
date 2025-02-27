@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:xterm/xterm.dart';
 import '../services/workspace_service.dart';
 
 class TerminalPane extends StatefulWidget {
@@ -13,26 +12,24 @@ class TerminalPane extends StatefulWidget {
 }
 
 class TerminalPaneState extends State<TerminalPane> {
-  late Terminal _terminal;
   Process? _process;
   bool _isLoading = false;
   String? _error;
   final TextEditingController _controller = TextEditingController();
   final List<String> _output = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _terminal = Terminal(
-      maxLines: 10000,
-    );
     _startTerminal();
   }
 
   @override
   void dispose() {
     _process?.kill();
-    _terminal.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -56,7 +53,7 @@ class TerminalPaneState extends State<TerminalPane> {
 
       // Use bash on Linux/macOS and cmd on Windows
       final shell = Platform.isWindows ? 'cmd.exe' : '/bin/bash';
-      final args = Platform.isWindows ? [] : [];
+      final args = Platform.isWindows ? <String>[] : <String>[];
 
       _process = await Process.start(
         shell,
@@ -65,24 +62,31 @@ class TerminalPaneState extends State<TerminalPane> {
         environment: {'TERM': 'xterm-256color'},
       );
 
-      _terminal.write('Welcome to CodeForge Terminal\r\n');
-      _terminal.write('Current directory: $workspacePath\r\n\r\n');
+      setState(() {
+        _output.add('Welcome to CodeForge Terminal');
+        _output.add('Current directory: $workspacePath');
+        _output.add('');
+      });
 
       // Connect stdin/stdout
       _process!.stdout.listen((event) {
-        _terminal.write(String.fromCharCodes(event));
+        setState(() {
+          _output.add(String.fromCharCodes(event).trim());
+        });
+        _scrollToBottom();
       });
 
       _process!.stderr.listen((event) {
-        _terminal.write(String.fromCharCodes(event));
+        setState(() {
+          _output.add(String.fromCharCodes(event).trim());
+        });
+        _scrollToBottom();
       });
 
-      _terminal.onOutput = (data) {
-        _process?.stdin.write(data);
-      };
-
       _process!.exitCode.then((exitCode) {
-        _terminal.write('\r\n[Process exited with code $exitCode]\r\n');
+        setState(() {
+          _output.add('[Process exited with code $exitCode]');
+        });
       });
 
       setState(() {
@@ -96,10 +100,35 @@ class TerminalPaneState extends State<TerminalPane> {
     }
   }
 
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
   void _restartTerminal() {
     _process?.kill();
-    _terminal.clear();
+    setState(() {
+      _output.clear();
+    });
     _startTerminal();
+  }
+
+  void _sendCommand(String command) {
+    if (_process != null) {
+      setState(() {
+        _output.add('> $command');
+      });
+      _process!.stdin.writeln(command);
+      _controller.clear();
+      _scrollToBottom();
+    }
   }
 
   @override
@@ -120,7 +149,7 @@ class TerminalPaneState extends State<TerminalPane> {
               IconButton(
                 icon: const Icon(Icons.clear_all, size: 16),
                 tooltip: 'Clear Terminal',
-                onPressed: () => _terminal.clear(),
+                onPressed: () => setState(() => _output.clear()),
               ),
               const Spacer(),
               if (_isLoading)
@@ -153,18 +182,27 @@ class TerminalPaneState extends State<TerminalPane> {
 
         // Terminal view
         Expanded(
-          child: Padding(
+          child: Container(
+            color: Colors.black,
             padding: const EdgeInsets.all(8.0),
-            child: TerminalView(
-              _terminal,
-              padding: const EdgeInsets.all(8),
-              textStyle: const TerminalStyle(
-                fontSize: 14,
-                fontFamily: 'monospace',
-              ),
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: _output.length,
+              itemBuilder: (context, index) {
+                return Text(
+                  _output[index],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                  ),
+                );
+              },
             ),
           ),
         ),
+
+        // Input field
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -177,13 +215,8 @@ class TerminalPaneState extends State<TerminalPane> {
                     border: InputBorder.none,
                     isDense: true,
                   ),
-                  style: const TextStyle(fontFamily: 'JetBrains Mono'),
-                  onSubmitted: (value) {
-                    setState(() {
-                      _output.add(value);
-                      _controller.clear();
-                    });
-                  },
+                  style: const TextStyle(fontFamily: 'monospace'),
+                  onSubmitted: _sendCommand,
                 ),
               ),
             ],
