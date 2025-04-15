@@ -1,20 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/theme_service.dart';
-import '../services/workspace_service.dart';
-import '../services/tab_manager_service.dart';
 import '../widgets/file_explorer.dart';
 import '../widgets/source_control_pane.dart';
 import '../widgets/search_panel.dart';
 import '../widgets/ai_pane.dart';
-import '../widgets/status_bar.dart';
-import '../widgets/tab_bar.dart';
-import '../widgets/bottom_tab_panel.dart';
-import '../widgets/top_menu_bar.dart';
-import '../widgets/command_palette.dart';
-import '../widgets/code_editor.dart';
-import '../widgets/workspace_drop_area.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 class MainScreen extends StatefulWidget {
@@ -65,7 +53,7 @@ class MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  void _toggleCommandPalette() {
+  void toggleCommandPalette() {
     setState(() {
       _showCommandPalette = !_showCommandPalette;
     });

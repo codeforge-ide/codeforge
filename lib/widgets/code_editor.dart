@@ -95,11 +95,11 @@ class CodeEditorState extends State<CodeEditor> {
           // You can trigger the command palette here, e.g. via a callback
           if (context
                   .findAncestorStateOfType<MainScreenState>()
-                  ?._toggleCommandPalette !=
+                  ?.toggleCommandPalette !=
               null) {
             context
                 .findAncestorStateOfType<MainScreenState>()!
-                ._toggleCommandPalette();
+                .toggleCommandPalette();
           }
           break;
         // TODO: Implement split actions
