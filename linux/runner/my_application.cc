@@ -3,6 +3,8 @@
 
 #include <flutter_linux/flutter_linux.h>
 #include <flutter_linux/fl_method_channel.h>
+#include <flutter_linux/fl_method_response.h>
+#include <flutter_linux/fl_binary_messenger.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -18,12 +20,34 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
-// Correct forward declaration for the method call handler using FlMethodResponseHandle
+// Window control method handler with direct callback style
 static void window_control_method_call(
   FlMethodChannel* channel,
   FlMethodCall* method_call,
-  FlMethodResponseHandle* response_handle, // Use FlMethodResponseHandle*
-  gpointer user_data);
+  gpointer user_data) {
+  GtkWindow* window = GTK_WINDOW(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+
+  if (strcmp(method, "maximize") == 0) {
+    gtk_window_maximize(window);
+    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(NULL));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (strcmp(method, "unmaximize") == 0) {
+    gtk_window_unmaximize(window);
+    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(NULL));
+    fl_method_call_respond(method_call, response, NULL);
+  } else if (strcmp(method, "isMaximized") == 0) {
+    gboolean maximized = gtk_window_is_maximized(window);
+    g_autoptr(FlValue) result = fl_value_new_bool(maximized);
+    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+    fl_method_call_respond(method_call, response, NULL);
+  } else {
+    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+    fl_method_call_respond(method_call, response, NULL);
+  }
+}
+
+
 
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
@@ -83,7 +107,7 @@ static void my_application_activate(GApplication* application) {
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(messenger,
                                                            "window_control_channel",
                                                            FL_METHOD_CODEC(codec));
-  // Set the handler with the correct signature
+  // Set the handler with the updated signature
   fl_method_channel_set_method_call_handler(channel,
                                           window_control_method_call,
                                           window, // user_data
@@ -97,33 +121,6 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
-// Correct implementation of the method call handler using FlMethodResponseHandle
-static void window_control_method_call(
-  FlMethodChannel* channel,
-  FlMethodCall* method_call,
-  FlMethodResponseHandle* response_handle, // Use FlMethodResponseHandle*
-  gpointer user_data) {
-  GtkWindow* window = GTK_WINDOW(user_data);
-  const gchar* method = fl_method_call_get_name(method_call);
-
-  if (strcmp(method, "maximize") == 0) {
-    gtk_window_maximize(window);
-    // Use fl_method_channel_respond_success with response_handle
-    fl_method_channel_respond_success(channel, response_handle, nullptr, nullptr);
-  } else if (strcmp(method, "unmaximize") == 0) {
-    gtk_window_unmaximize(window);
-    // Use fl_method_channel_respond_success with response_handle
-    fl_method_channel_respond_success(channel, response_handle, nullptr, nullptr);
-  } else if (strcmp(method, "isMaximized") == 0) {
-    gboolean maximized = gtk_window_is_maximized(window);
-    g_autoptr(FlValue) result = fl_value_new_bool(maximized);
-    // Use fl_method_channel_respond_success with response_handle
-    fl_method_channel_respond_success(channel, response_handle, result, nullptr);
-  } else {
-    // Use fl_method_channel_respond_not_implemented with response_handle
-    fl_method_channel_respond_not_implemented(channel, response_handle, nullptr);
-  }
-}
 
 // Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application, gchar*** arguments, int* exit_status) {
