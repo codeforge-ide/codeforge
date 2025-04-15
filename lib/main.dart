@@ -23,6 +23,7 @@ import 'services/codeforge_storage_service.dart';
 import 'widgets/top_menu_bar.dart';
 import 'widgets/command_palette.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -108,16 +109,17 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _leftSidebarViews = [];
   final List<Widget> _rightSidebarViews = [];
 
-  // Main layout split ratio
-  double _mainHorizontalSplitRatio = 0.2; // Left sidebar width
-  double _mainVerticalSplitRatio = 0.7; // Editor height
-  double _rightSplitRatio = 0.7; // Right top pane height
+  late final ResizableController _mainController;
+  late final ResizableController _editorController;
 
   FocusNode _keyboardFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+
+    _mainController = ResizableController();
+    _editorController = ResizableController();
 
     // Initialize the sidebar views
     _leftSidebarViews.addAll([
@@ -130,6 +132,13 @@ class _MainScreenState extends State<MainScreen> {
     _rightSidebarViews.addAll([
       const AIPane(),
     ]);
+  }
+
+  @override
+  void dispose() {
+    _mainController.dispose();
+    _editorController.dispose();
+    super.dispose();
   }
 
   Future<void> _handleOpenWorkspace(String path) async {
@@ -256,12 +265,16 @@ class _MainScreenState extends State<MainScreen> {
 
               // Main content
               Expanded(
-                child: Row(
+                child: ResizableContainer(
+                  controller: _mainController,
+                  direction: Axis.horizontal,
                   children: [
-                    // Left sidebar
+                    // Primary sidebar
                     if (_showLeftSidebar)
-                      SizedBox(
-                        width: 48,
+                      ResizableChild(
+                        size: ResizableSize.pixels(48, min: 40, max: 80),
+                        divider: ResizableDivider(
+                            thickness: 3, color: Colors.grey[700]),
                         child: Material(
                           color: Theme.of(context)
                               .colorScheme
@@ -302,76 +315,55 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ),
 
-                    // Left sidebar content
+                    // Sidebar content
                     if (_showLeftSidebar)
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width *
-                                _mainHorizontalSplitRatio -
-                            48,
+                      ResizableChild(
+                        size: ResizableSize.ratio(0.2, min: 100, max: 400),
+                        divider: ResizableDivider(
+                            thickness: 3, color: Colors.grey[700]),
                         child: Container(
                           color: Theme.of(context).colorScheme.background,
                           child: _leftSidebarViews[_selectedLeftSidebarIndex],
                         ),
                       ),
 
-                    // Resizer for left sidebar
-                    if (_showLeftSidebar)
-                      GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onHorizontalDragUpdate: (details) {
-                          setState(() {
-                            _mainHorizontalSplitRatio += details.delta.dx /
-                                MediaQuery.of(context).size.width;
-                            _mainHorizontalSplitRatio =
-                                _mainHorizontalSplitRatio.clamp(0.1, 0.6);
-                          });
-                        },
-                        child: Container(
-                          width: 4,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-
-                    // Main editor area
-                    Expanded(
-                      child: Column(
+                    // Main editor + right sidebar
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      child: ResizableContainer(
+                        controller: _editorController,
+                        direction: Axis.horizontal,
                         children: [
-                          // Move EditorTabBar here so it appears above the editor, not above the sidebar
-                          const EditorTabBar(),
-                          // Editor area
-                          Expanded(
-                            child: const CodeEditor(),
+                          // Editor area (with tab bar and bottom panel)
+                          ResizableChild(
+                            size: ResizableSize.expand(),
+                            divider: ResizableDivider(
+                                thickness: 3, color: Colors.grey[700]),
+                            child: Column(
+                              children: [
+                                const EditorTabBar(),
+                                Expanded(
+                                  child: const CodeEditor(),
+                                ),
+                                if (_showBottomPanel)
+                                  SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.25,
+                                    child: const BottomTabPanel(),
+                                  ),
+                              ],
+                            ),
                           ),
-                          if (_showBottomPanel)
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.25,
-                              child: const BottomTabPanel(),
+                          // Right sidebar
+                          if (_showRightSidebar)
+                            ResizableChild(
+                              size:
+                                  ResizableSize.pixels(300, min: 150, max: 500),
+                              child: _rightSidebarViews[0],
                             ),
                         ],
                       ),
                     ),
-
-                    // Right sidebar resizer
-                    if (_showRightSidebar)
-                      GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onHorizontalDragUpdate: (details) {
-                          setState(() {
-                            // Update right sidebar width
-                          });
-                        },
-                        child: Container(
-                          width: 4,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-
-                    // Right sidebar
-                    if (_showRightSidebar)
-                      SizedBox(
-                        width: 300,
-                        child: _rightSidebarViews[0],
-                      ),
                   ],
                 ),
               ),
