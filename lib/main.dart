@@ -20,7 +20,6 @@ import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
 import 'widgets/bottom_tab_panel.dart';
 import 'services/codeforge_storage_service.dart';
-import 'widgets/resizable_split_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -209,82 +208,123 @@ class _MainScreenState extends State<MainScreen> {
 
               // Main content
               Expanded(
-                child: ResizableSplitView(
-                  orientation: SplitViewOrientation.horizontal,
-                  initialRatio: _mainHorizontalSplitRatio,
-                  first: Column(
-                    children: [
-                      // Sidebar icons
-                      if (_showLeftSidebar)
-                        SizedBox(
-                          width: 48,
-                          child: Material(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .background
-                                .withOpacity(0.9),
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                _buildSidebarIconButton(
-                                  0,
-                                  Icons.folder,
-                                  'Explorer',
-                                  tooltip: 'Explorer (Ctrl+Shift+E)',
-                                ),
-                                _buildSidebarIconButton(
-                                  1,
-                                  Icons.source,
-                                  'Source Control',
-                                  tooltip: 'Source Control (Ctrl+Shift+G)',
-                                ),
-                                _buildSidebarIconButton(
-                                  2,
-                                  Icons.search,
-                                  'Search',
-                                  tooltip: 'Search (Ctrl+Shift+F)',
-                                ),
-                                const Spacer(),
-                                IconButton(
-                                  icon: const Icon(Icons.settings),
-                                  onPressed: () {
-                                    // Open settings
-                                  },
-                                  tooltip: 'Settings',
-                                ),
-                                const SizedBox(height: 8),
-                              ],
+                child: Row(
+                  children: [
+                    // Left sidebar
+                    if (_showLeftSidebar)
+                      SizedBox(
+                        width: 48,
+                        child: Material(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .background
+                              .withOpacity(0.9),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 8),
+                              _buildSidebarIconButton(
+                                0,
+                                Icons.folder,
+                                'Explorer',
+                                tooltip: 'Explorer (Ctrl+Shift+E)',
+                              ),
+                              _buildSidebarIconButton(
+                                1,
+                                Icons.source,
+                                'Source Control',
+                                tooltip: 'Source Control (Ctrl+Shift+G)',
+                              ),
+                              _buildSidebarIconButton(
+                                2,
+                                Icons.search,
+                                'Search',
+                                tooltip: 'Search (Ctrl+Shift+F)',
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.settings),
+                                onPressed: () {
+                                  // Open settings
+                                },
+                                tooltip: 'Settings',
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // Left sidebar content
+                    if (_showLeftSidebar)
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width *
+                                _mainHorizontalSplitRatio -
+                            48,
+                        child: Container(
+                          color: Theme.of(context).colorScheme.background,
+                          child: _leftSidebarViews[_selectedLeftSidebarIndex],
+                        ),
+                      ),
+
+                    // Resizer for left sidebar
+                    if (_showLeftSidebar)
+                      GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onHorizontalDragUpdate: (details) {
+                          setState(() {
+                            _mainHorizontalSplitRatio += details.delta.dx /
+                                MediaQuery.of(context).size.width;
+                            _mainHorizontalSplitRatio =
+                                _mainHorizontalSplitRatio.clamp(0.1, 0.6);
+                          });
+                        },
+                        child: Container(
+                          width: 4,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+
+                    // Main editor area
+                    Expanded(
+                      child: Column(
+                        children: [
+                          // Move EditorTabBar here so it appears above the editor, not above the sidebar
+                          const EditorTabBar(),
+                          // Editor area
+                          Expanded(
+                            child: const CodeEditor(),
+                          ),
+                          if (_showBottomPanel)
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.25,
+                              child: const BottomTabPanel(),
                             ),
-                          ),
-                        ),
-                      // Sidebar content
-                      if (_showLeftSidebar)
-                        Expanded(
-                          child: Container(
-                            color: Theme.of(context).colorScheme.background,
-                            child: _leftSidebarViews[_selectedLeftSidebarIndex],
-                          ),
-                        ),
-                    ],
-                  ),
-                  second: ResizableSplitView(
-                    orientation: SplitViewOrientation.vertical,
-                    initialRatio: 0.8,
-                    first: Column(
-                      children: [
-                        const EditorTabBar(),
-                        Expanded(
-                          child: const CodeEditor(),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    second: _showBottomPanel
-                        ? SizedBox(
-                            child: const BottomTabPanel(),
-                            height: MediaQuery.of(context).size.height * 0.25,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
+
+                    // Right sidebar resizer
+                    if (_showRightSidebar)
+                      GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onHorizontalDragUpdate: (details) {
+                          setState(() {
+                            // Update right sidebar width
+                          });
+                        },
+                        child: Container(
+                          width: 4,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+
+                    // Right sidebar
+                    if (_showRightSidebar)
+                      SizedBox(
+                        width: 300,
+                        child: _rightSidebarViews[0],
+                      ),
+                  ],
                 ),
               ),
 
