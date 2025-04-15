@@ -21,6 +21,7 @@ import 'widgets/status_bar.dart';
 import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
 import 'widgets/problems_panel.dart';
+import 'widgets/bottom_tab_panel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,7 +95,6 @@ class _MainScreenState extends State<MainScreen> {
   bool _showRightSidebar = false;
 
   final List<Widget> _leftSidebarViews = [];
-  final List<Widget> _bottomPanelViews = [];
   final List<Widget> _rightSidebarViews = [];
 
   // Main layout split ratio
@@ -111,14 +111,6 @@ class _MainScreenState extends State<MainScreen> {
       const FileExplorer(),
       const SourceControlPane(),
       const SearchPanel(mode: SearchMode.files),
-    ]);
-
-    // Initialize the bottom panel views
-    _bottomPanelViews.addAll([
-      const TerminalPane(),
-      const OutputPane(),
-      const ProblemsPanel(),
-      const AIPane(),
     ]);
 
     // Initialize the right sidebar views
@@ -300,69 +292,13 @@ class _MainScreenState extends State<MainScreen> {
                       child: Column(
                         children: [
                           // Editor area
-                          SizedBox(
-                            height: _showBottomPanel
-                                ? MediaQuery.of(context).size.height *
-                                        _mainVerticalSplitRatio -
-                                    120
-                                : MediaQuery.of(context).size.height - 120,
+                          Expanded(
                             child: const CodeEditor(),
                           ),
-
-                          // Resizer for bottom panel
                           if (_showBottomPanel)
-                            GestureDetector(
-                              behavior: HitTestBehavior.translucent,
-                              onVerticalDragUpdate: (details) {
-                                setState(() {
-                                  _mainVerticalSplitRatio -= details.delta.dy /
-                                      MediaQuery.of(context).size.height;
-                                  _mainVerticalSplitRatio =
-                                      _mainVerticalSplitRatio.clamp(0.2, 0.9);
-                                });
-                              },
-                              child: Container(
-                                height: 4,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-
-                          // Bottom panel with tabs
-                          if (_showBottomPanel)
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  // Bottom panel tabs
-                                  Container(
-                                    height: 36,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .background
-                                        .withOpacity(0.9),
-                                    child: Row(
-                                      children: [
-                                        _buildBottomPanelTab(0, 'Terminal'),
-                                        _buildBottomPanelTab(1, 'Output'),
-                                        _buildBottomPanelTab(2, 'Problems'),
-                                        _buildBottomPanelTab(3, 'AI Assistant'),
-                                        const Spacer(),
-                                        IconButton(
-                                          icon:
-                                              const Icon(Icons.close, size: 16),
-                                          onPressed: _toggleBottomPanel,
-                                          tooltip: 'Close Panel',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Bottom panel content
-                                  Expanded(
-                                    child: _bottomPanelViews[
-                                        _selectedBottomPanelIndex],
-                                  ),
-                                ],
-                              ),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.25,
+                              child: const BottomTabPanel(),
                             ),
                         ],
                       ),
@@ -446,38 +382,6 @@ class _MainScreenState extends State<MainScreen> {
           child: Icon(
             icon,
             color: isSelected ? Theme.of(context).colorScheme.primary : null,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomPanelTab(int index, String title) {
-    final isSelected = _selectedBottomPanelIndex == index;
-
-    return InkWell(
-      onTap: () => setState(() => _selectedBottomPanelIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          color: isSelected
-              ? Theme.of(context).colorScheme.surface
-              : Colors.transparent,
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
