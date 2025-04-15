@@ -19,6 +19,7 @@ import 'widgets/status_bar.dart';
 import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
 import 'widgets/bottom_tab_panel.dart';
+import 'services/codeforge_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -116,15 +117,14 @@ class _MainScreenState extends State<MainScreen> {
     ]);
   }
 
+  Future<void> _handleOpenWorkspace(String path) async {
+    Provider.of<WorkspaceService>(context, listen: false).addWorkspace(path);
+    await CodeforgeStorageService.addRecentWorkspace(path);
+  }
+
   void _toggleCommandPalette() {
     setState(() {
       _showCommandPalette = !_showCommandPalette;
-    });
-  }
-
-  void _toggleSearchPanel() {
-    setState(() {
-      _showSearchPanel = !_showSearchPanel;
     });
   }
 

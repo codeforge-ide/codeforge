@@ -6,6 +6,7 @@ import 'package:highlight/languages/dart.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:highlight/languages/javascript.dart';
 import '../services/tab_manager_service.dart';
+import 'markdown_preview.dart';
 
 class CodeEditor extends StatefulWidget {
   const CodeEditor({super.key});
@@ -20,7 +21,11 @@ class CodeEditorState extends State<CodeEditor> {
     'dart': dart,
     'python': python,
     'javascript': javascript,
+    'plaintext': null, // For plain text and unknown types
+    'markdown': null, // For .md files (optional, can add a highlighter)
   };
+
+  List<String> get _dropdownLanguages => _languageMap.keys.toList();
 
   @override
   void initState() {
@@ -58,70 +63,79 @@ class CodeEditorState extends State<CodeEditor> {
       return const Center(child: Text('No file open'));
     }
 
-    final language = editorState.language;
+    // Always show file content, regardless of language type
+    final language = _languageMap.containsKey(editorState.language)
+        ? editorState.language
+        : 'plaintext';
     final content = editorState.content;
+    final filePath = activeTab?.filePath ?? '';
 
-    _codeController ??= CodeController(
-      text: content,
-      language: _languageMap[language] ?? dart,
-      patternMap: monokaiSublimeTheme,
-    );
-    if (_codeController!.text != content) {
-      _codeController!.text = content;
-    }
-    if (_codeController!.language != (_languageMap[language] ?? dart)) {
-      _codeController!.language = _languageMap[language] ?? dart;
-    }
+    final isMarkdown =
+        language == 'markdown' || filePath.toLowerCase().endsWith('.md');
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+    // Force rebuild of the editor/preview split when switching files by using a Key
+    return isMarkdown
+        ? Row(
+            key: ValueKey('md-$filePath'),
             children: [
-              DropdownButton<String>(
-                value: language,
-                items: _languageMap.keys.map((lang) {
-                  return DropdownMenuItem(
-                    value: lang,
-                    child: Text(lang.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (newLanguage) {
-                  if (newLanguage != null) {
-                    editorState.setLanguage(newLanguage);
-                    setState(() {
-                      _codeController?.language =
-                          _languageMap[newLanguage] ?? dart;
-                    });
-                  }
-                },
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SizedBox(
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight,
+                            child: CodeField(
+                              controller: _codeController!,
+                              onChanged: (content) {
+                                editorState.updateContent(content);
+                              },
+                              textStyle:
+                                  const TextStyle(fontFamily: 'monospace'),
+                              expands: true,
+                              maxLines: null,
+                              minLines: null,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              VerticalDivider(width: 1),
+              Expanded(
+                child: MarkdownPreview(
+                    key: ValueKey('md-preview-$filePath'), content: content),
               ),
             ],
-          ),
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: CodeField(
-                  controller: _codeController!,
-                  onChanged: (content) {
-                    editorState.updateContent(content);
+          )
+        : Column(
+            key: ValueKey('not-md-$filePath'),
+            children: [
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SizedBox(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      child: CodeField(
+                        controller: _codeController!,
+                        onChanged: (content) {
+                          editorState.updateContent(content);
+                        },
+                        textStyle: const TextStyle(fontFamily: 'monospace'),
+                        expands: true,
+                        maxLines: null,
+                        minLines: null,
+                      ),
+                    );
                   },
-                  textStyle: const TextStyle(fontFamily: 'monospace'),
-                  expands:
-                      true, // This makes CodeField fill and scroll within its area
-                  maxLines: null, // Allow unlimited lines
-                  minLines: null,
                 ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+              ),
+            ],
+          );
   }
 }
