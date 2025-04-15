@@ -24,6 +24,7 @@ import 'widgets/top_menu_bar.dart';
 import 'widgets/command_palette.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,16 @@ void main() async {
       child: const CodeforgeApp(),
     ),
   );
+
+  doWhenWindowReady(() {
+    final win = appWindow;
+    const initialSize = Size(1200, 800);
+    win.minSize = initialSize;
+    win.size = initialSize;
+    win.alignment = Alignment.center;
+    win.title = ""; // Remove window title
+    win.show();
+  });
 }
 
 class CodeforgeApp extends StatelessWidget {
