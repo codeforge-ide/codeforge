@@ -5,6 +5,8 @@
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
+#include <cstring>
+#include <gtk/gtk.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -64,6 +66,14 @@ static void my_application_activate(GApplication* application) {
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
+
+  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
+    fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+    "window_control_channel",
+    FL_METHOD_CODEC(fl_standard_method_codec_new()));
+  fl_method_channel_set_method_call_handler(channel, window_control_method_call, window, nullptr);
+
+
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
@@ -71,6 +81,30 @@ static void my_application_activate(GApplication* application) {
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
+
+
+static FlMethodResponse* window_control_method_call(
+  FlMethodChannel* channel,
+  FlMethodCall* method_call,
+  gpointer user_data) {
+GtkWindow* window = GTK_WINDOW(user_data);
+const gchar* method = fl_method_call_get_name(method_call);
+
+if (strcmp(method, "maximize") == 0) {
+  gtk_window_maximize(window);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+} else if (strcmp(method, "unmaximize") == 0) {
+  gtk_window_unmaximize(window);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+} else if (strcmp(method, "isMaximized") == 0) {
+  gboolean maximized = gtk_window_is_maximized(window);
+  g_autoptr(FlValue) result = fl_value_new_bool(maximized);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+}
+
+return FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+}
+
 
 // Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application, gchar*** arguments, int* exit_status) {

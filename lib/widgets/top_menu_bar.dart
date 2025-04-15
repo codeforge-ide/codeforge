@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import '../utils/window_channel.dart';
 
 class TopMenuBar extends StatelessWidget {
   final void Function(String) onMenuSelected;
@@ -53,10 +54,9 @@ class TopMenuBar extends StatelessWidget {
                           child: Container(
                             height: 28,
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer
-                                  .withOpacity(0.08),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -74,9 +74,13 @@ class TopMenuBar extends StatelessWidget {
                                   ),
                                 ),
                                 const Spacer(),
-                                Text('Ctrl+Shift+P',
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
+                                Text(
+                                  'Ctrl+Shift+P',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -123,7 +127,19 @@ class TopMenuBar extends StatelessWidget {
           Row(
             children: [
               MinimizeWindowButton(),
-              MaximizeWindowButton(),
+              // Replace MaximizeWindowButton with a custom maximize button using WindowChannel
+              IconButton(
+                icon: const Icon(Icons.crop_square),
+                tooltip: 'Maximize/Restore',
+                onPressed: () async {
+                  final maximized = await WindowChannel.isMaximized();
+                  if (maximized) {
+                    await WindowChannel.unmaximize();
+                  } else {
+                    await WindowChannel.maximize();
+                  }
+                },
+              ),
               CloseWindowButton(),
             ],
           ),
@@ -135,9 +151,10 @@ class TopMenuBar extends StatelessWidget {
   Widget _buildMenu(String label) {
     return PopupMenuButton<String>(
       onSelected: onMenuSelected,
-      itemBuilder: (context) => [
-        PopupMenuItem(value: '$label:dummy', child: Text('Coming soon...')),
-      ],
+      itemBuilder:
+          (context) => [
+            PopupMenuItem(value: '$label:dummy', child: Text('Coming soon...')),
+          ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Text(
