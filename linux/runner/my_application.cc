@@ -2,6 +2,7 @@
 #include <bitsdojo_window_linux/bitsdojo_window_plugin.h>
 
 #include <flutter_linux/flutter_linux.h>
+#include <flutter_linux/fl_method_channel.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
