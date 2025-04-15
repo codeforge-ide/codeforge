@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:code_text_field/code_text_field.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:highlight/languages/dart.dart';
 import 'package:highlight/languages/python.dart';
@@ -41,7 +41,6 @@ class CodeEditorState extends State<CodeEditor> {
       return const Center(child: Text('No file open'));
     }
 
-    // Defensive: always create a new controller for each file/tab
     final language = _languageMap.containsKey(editorState.language)
         ? editorState.language
         : 'plaintext';
@@ -50,44 +49,31 @@ class CodeEditorState extends State<CodeEditor> {
     final isMarkdown =
         language == 'markdown' || filePath.toLowerCase().endsWith('.md');
 
-    // Always create a new controller for each file/tab to avoid null issues
+    // Use flutter_code_editor's CodeController
     final codeController = CodeController(
       text: content,
       language: _languageMap[language],
-      patternMap: monokaiSublimeTheme,
+    );
+
+    // Use CodeTheme for highlighting
+    final codeField = CodeTheme(
+      data: CodeThemeData(styles: monokaiSublimeTheme),
+      child: CodeField(
+        controller: codeController,
+        expands: true,
+        maxLines: null,
+        minLines: null,
+        textStyle: const TextStyle(fontFamily: 'monospace'),
+        onChanged: (text) => editorState.updateContent(text),
+        // You can add more options here (gutterStyle, autocompletion, etc.)
+      ),
     );
 
     return isMarkdown
         ? Row(
             key: ValueKey('md-$filePath'),
             children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SizedBox(
-                            width: constraints.maxWidth,
-                            height: constraints.maxHeight,
-                            child: CodeField(
-                              controller: codeController,
-                              onChanged: (content) {
-                                editorState.updateContent(content);
-                              },
-                              textStyle:
-                                  const TextStyle(fontFamily: 'monospace'),
-                              expands: true,
-                              maxLines: null,
-                              minLines: null,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(child: codeField),
               VerticalDivider(width: 1),
               Expanded(
                 child: MarkdownPreview(
@@ -95,30 +81,6 @@ class CodeEditorState extends State<CodeEditor> {
               ),
             ],
           )
-        : Column(
-            key: ValueKey('not-md-$filePath'),
-            children: [
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SizedBox(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      child: CodeField(
-                        controller: codeController,
-                        onChanged: (content) {
-                          editorState.updateContent(content);
-                        },
-                        textStyle: const TextStyle(fontFamily: 'monospace'),
-                        expands: true,
-                        maxLines: null,
-                        minLines: null,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
+        : codeField;
   }
 }

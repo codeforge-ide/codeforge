@@ -37,6 +37,13 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setThemeMode(ThemeMode mode) {
+    if (_themeMode != mode) {
+      _themeMode = mode;
+      notifyListeners();
+    }
+  }
+
   void setFontSize(double size) {
     if (size >= 8 && size <= 32) {
       _fontSize = size;

@@ -113,6 +113,8 @@ class _MainScreenState extends State<MainScreen> {
   double _mainVerticalSplitRatio = 0.7; // Editor height
   double _rightSplitRatio = 0.7; // Right top pane height
 
+  FocusNode _keyboardFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -167,9 +169,11 @@ class _MainScreenState extends State<MainScreen> {
 
   void _toggleLightDarkMode() {
     final themeService = context.read<ThemeService>();
-    themeService.themeMode = themeService.themeMode == ThemeMode.dark
-        ? ThemeMode.light
-        : ThemeMode.dark;
+    themeService.setThemeMode(
+      themeService.themeMode == ThemeMode.dark
+          ? ThemeMode.light
+          : ThemeMode.dark,
+    );
   }
 
   void _toggleHighContrast() {
@@ -185,7 +189,7 @@ class _MainScreenState extends State<MainScreen> {
     });
     final themeService = context.read<ThemeService>();
     if (_isUltraDark) {
-      themeService.themeMode = ThemeMode.dark;
+      themeService.setThemeMode(ThemeMode.dark);
       // You can expand this to set a custom ultra-dark theme
     }
   }
@@ -197,28 +201,29 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
+      focusNode: _keyboardFocusNode,
+      autofocus: true,
       onKey: (RawKeyEvent event) {
         // Handle keyboard shortcuts
         if (event is RawKeyDownEvent) {
-          // Cmd/Ctrl + Shift + P: Command palette
-          if (event.isMetaPressed &&
+          // Support both Ctrl+Shift+P and Cmd+Shift+P (for Mac)
+          final isCtrlOrCmd = event.isControlPressed || event.isMetaPressed;
+          if (isCtrlOrCmd &&
               event.isShiftPressed &&
-              event.logicalKey == LogicalKeyboardKey.keyP) {
+              (event.logicalKey == LogicalKeyboardKey.keyP ||
+                  event.logicalKey.keyLabel.toLowerCase() == 'p')) {
             _toggleCommandPalette();
           }
           // Cmd/Ctrl + B: Toggle sidebar
-          else if (event.isMetaPressed &&
-              event.logicalKey == LogicalKeyboardKey.keyB) {
+          else if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyB) {
             _toggleLeftSidebar();
           }
           // Cmd/Ctrl + J: Toggle bottom panel
-          else if (event.isMetaPressed &&
-              event.logicalKey == LogicalKeyboardKey.keyJ) {
+          else if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyJ) {
             _toggleBottomPanel();
           }
           // Cmd/Ctrl + Shift + F: Search
-          else if (event.isMetaPressed &&
+          else if (isCtrlOrCmd &&
               event.isShiftPressed &&
               event.logicalKey == LogicalKeyboardKey.keyF) {
             _toggleSearchPanel();
