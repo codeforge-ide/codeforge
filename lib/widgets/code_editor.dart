@@ -16,7 +16,6 @@ class CodeEditor extends StatefulWidget {
 }
 
 class CodeEditorState extends State<CodeEditor> {
-  CodeController? _codeController;
   final Map<String, dynamic> _languageMap = {
     'dart': dart,
     'python': python,
@@ -30,27 +29,6 @@ class CodeEditorState extends State<CodeEditor> {
   @override
   void initState() {
     super.initState();
-    _initializeController();
-  }
-
-  void _initializeController() {
-    final tabManager = context.read<TabManagerService>();
-    final activeTab = tabManager.activeTab;
-    final editorState = activeTab?.editorState;
-
-    if (editorState != null) {
-      _codeController = CodeController(
-        text: editorState.content,
-        language: _languageMap[editorState.language] ?? dart,
-        patternMap: monokaiSublimeTheme,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _codeController?.dispose();
-    super.dispose();
   }
 
   @override
@@ -63,17 +41,22 @@ class CodeEditorState extends State<CodeEditor> {
       return const Center(child: Text('No file open'));
     }
 
-    // Always show file content, regardless of language type
+    // Defensive: always create a new controller for each file/tab
     final language = _languageMap.containsKey(editorState.language)
         ? editorState.language
         : 'plaintext';
     final content = editorState.content;
     final filePath = activeTab?.filePath ?? '';
-
     final isMarkdown =
         language == 'markdown' || filePath.toLowerCase().endsWith('.md');
 
-    // Force rebuild of the editor/preview split when switching files by using a Key
+    // Always create a new controller for each file/tab to avoid null issues
+    final codeController = CodeController(
+      text: content,
+      language: _languageMap[language],
+      patternMap: monokaiSublimeTheme,
+    );
+
     return isMarkdown
         ? Row(
             key: ValueKey('md-$filePath'),
@@ -88,7 +71,7 @@ class CodeEditorState extends State<CodeEditor> {
                             width: constraints.maxWidth,
                             height: constraints.maxHeight,
                             child: CodeField(
-                              controller: _codeController!,
+                              controller: codeController,
                               onChanged: (content) {
                                 editorState.updateContent(content);
                               },
@@ -122,7 +105,7 @@ class CodeEditorState extends State<CodeEditor> {
                       width: constraints.maxWidth,
                       height: constraints.maxHeight,
                       child: CodeField(
-                        controller: _codeController!,
+                        controller: codeController,
                         onChanged: (content) {
                           editorState.updateContent(content);
                         },

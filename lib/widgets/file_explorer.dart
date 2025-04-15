@@ -9,6 +9,7 @@ import '../models/editor_state.dart';
 import '../utils/language_utils.dart';
 import 'shared/loading_overlay.dart';
 import 'shared/file_tree.dart';
+import '../services/codeforge_storage_service.dart';
 
 class FileExplorer extends StatefulWidget {
   const FileExplorer({super.key});
@@ -119,6 +120,7 @@ class FileExplorerState extends State<FileExplorer> {
   Future<void> _pickAndOpenFolder() async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
     if (selectedDirectory != null) {
+      await CodeforgeStorageService.addRecentWorkspace(selectedDirectory);
       context.read<WorkspaceService>().addWorkspace(selectedDirectory);
       await _loadEntities(selectedDirectory);
     }
