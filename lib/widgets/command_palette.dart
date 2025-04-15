@@ -1,56 +1,55 @@
 import 'package:flutter/material.dart';
 
 class CommandPalette extends StatelessWidget {
-  final VoidCallback onClose;
+  final VoidCallback onToggleLightDark;
+  final VoidCallback onToggleHighContrast;
+  final VoidCallback onToggleUltraDark;
+  final bool isDarkMode;
+  final bool isHighContrast;
+  final bool isUltraDark;
 
-  const CommandPalette({super.key, required this.onClose});
+  const CommandPalette({
+    super.key,
+    required this.onToggleLightDark,
+    required this.onToggleHighContrast,
+    required this.onToggleUltraDark,
+    required this.isDarkMode,
+    required this.isHighContrast,
+    required this.isUltraDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Dark translucent background to dismiss palette when tapped.
-        GestureDetector(
-          onTap: onClose,
-          child: Container(
-            color: Colors.black54,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-        ),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Card(
-              elevation: 8,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter command...',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Sample list of commands.
-                    ListView(
-                      shrinkWrap: true,
-                      children: const [
-                        ListTile(title: Text('Open Settings')),
-                        ListTile(title: Text('Change Theme')),
-                        ListTile(title: Text('Toggle Sidebar')),
-                      ],
-                    )
-                  ],
-                ),
-              ),
+    return Dialog(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      child: SizedBox(
+        width: 400,
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+              title: Text(
+                  isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'),
+              onTap: onToggleLightDark,
             ),
-          ),
+            ListTile(
+              leading: Icon(Icons.contrast),
+              title: Text(isHighContrast
+                  ? 'Disable High Contrast'
+                  : 'Enable High Contrast'),
+              onTap: onToggleHighContrast,
+            ),
+            ListTile(
+              leading: Icon(Icons.nightlight_round),
+              title: Text(
+                  isUltraDark ? 'Disable Ultra Dark' : 'Enable Ultra Dark'),
+              onTap: onToggleUltraDark,
+            ),
+            // Add more quick actions here as needed
+          ],
         ),
-      ],
+      ),
     );
   }
 }

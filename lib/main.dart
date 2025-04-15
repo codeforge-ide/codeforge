@@ -20,6 +20,8 @@ import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
 import 'widgets/bottom_tab_panel.dart';
 import 'services/codeforge_storage_service.dart';
+import 'widgets/top_menu_bar.dart';
+import 'widgets/command_palette.dart';
 import 'package:flutter/gestures.dart';
 
 void main() async {
@@ -100,6 +102,8 @@ class _MainScreenState extends State<MainScreen> {
   bool _showLeftSidebar = true;
   bool _showBottomPanel = true;
   bool _showRightSidebar = false;
+  bool _isHighContrast = false;
+  bool _isUltraDark = false;
 
   final List<Widget> _leftSidebarViews = [];
   final List<Widget> _rightSidebarViews = [];
@@ -161,6 +165,31 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _toggleLightDarkMode() {
+    final themeService = context.read<ThemeService>();
+    themeService.themeMode = themeService.themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+  }
+
+  void _toggleHighContrast() {
+    setState(() {
+      _isHighContrast = !_isHighContrast;
+    });
+    // You can expand this to actually change the theme colors for high contrast
+  }
+
+  void _toggleUltraDark() {
+    setState(() {
+      _isUltraDark = !_isUltraDark;
+    });
+    final themeService = context.read<ThemeService>();
+    if (_isUltraDark) {
+      themeService.themeMode = ThemeMode.dark;
+      // You can expand this to set a custom ultra-dark theme
+    }
+  }
+
   void _handleFileDrop(List<String> paths) {
     _handleOpenWorkspace(paths.first);
   }
@@ -201,18 +230,23 @@ class _MainScreenState extends State<MainScreen> {
           onDrop: _handleFileDrop,
           child: Column(
             children: [
-              // Top menu
-              AppBar(
-                title: const Text('Codeforge IDE'),
-                automaticallyImplyLeading: false,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () {
-                      // Show settings dialog
-                    },
-                  ),
-                ],
+              // Top menu bar and command palette
+              TopMenuBar(
+                onMenuSelected: (menu) {
+                  // TODO: Add menu actions
+                },
+                onCommandPalette: _toggleCommandPalette,
+                workspaceName: context
+                    .watch<WorkspaceService>()
+                    .activeWorkspace
+                    ?.split('/')
+                    ?.last,
+                onToggleSidebar: _toggleLeftSidebar,
+                onToggleSecondarySidebar: _toggleRightSidebar,
+                onToggleBottomBar: _toggleBottomPanel,
+                onCustomizeLayout: () {
+                  // TODO: Show layout customization dialog
+                },
               ),
 
               // Main content
