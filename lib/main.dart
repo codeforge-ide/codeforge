@@ -15,12 +15,9 @@ import 'services/file_system_service.dart';
 import 'services/settings_service.dart';
 import 'services/theme_service.dart';
 import 'widgets/file_explorer.dart';
-import 'widgets/terminal_pane.dart';
-import 'widgets/output_pane.dart';
 import 'widgets/status_bar.dart';
 import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
-import 'widgets/problems_panel.dart';
 import 'widgets/bottom_tab_panel.dart';
 
 void main() async {

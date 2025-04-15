@@ -97,21 +97,16 @@ class FileExplorerState extends State<FileExplorer> {
   Future<void> _openFile(String path) async {
     final fileSystemService = context.read<FileSystemService>();
     final tabManager = context.read<TabManagerService>();
-
     try {
       setState(() => _isLoading = true);
-
       final content = await fileSystemService.readFile(path);
-      final language = LanguageUtils.detectLanguageFromFilename(path);
-
+      final language = LanguageUtils.detectLanguage(path, content);
       final editorState = EditorState()
         ..updateContent(content)
         ..setLanguage(language)
         ..setFilename(fileSystemService.getFileName(path))
         ..markSaved();
-
       tabManager.openTab(path, editorState);
-
       setState(() => _isLoading = false);
     } catch (e) {
       setState(() {

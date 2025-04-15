@@ -62,6 +62,23 @@ class CodeEditorState extends State<CodeEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final editorState = context.watch<EditorState>();
+    final language = editorState.language;
+    final content = editorState.content;
+
+    // Recreate controller if language or content changes
+    _codeController ??= CodeController(
+      text: content,
+      language: _languageMap[language] ?? dart,
+      patternMap: monokaiSublimeTheme,
+    );
+    if (_codeController!.text != content) {
+      _codeController!.text = content;
+    }
+    if (_codeController!.language != (_languageMap[language] ?? dart)) {
+      _codeController!.language = _languageMap[language] ?? dart;
+    }
+
     return Column(
       children: [
         Padding(
@@ -69,7 +86,7 @@ class CodeEditorState extends State<CodeEditor> {
           child: Row(
             children: [
               DropdownButton<String>(
-                value: context.select((EditorState s) => s.language),
+                value: language,
                 items: _languageMap.keys.map((lang) {
                   return DropdownMenuItem(
                     value: lang,
