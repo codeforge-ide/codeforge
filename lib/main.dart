@@ -20,6 +20,7 @@ import 'widgets/search_panel.dart';
 import 'widgets/tab_bar.dart';
 import 'widgets/bottom_tab_panel.dart';
 import 'services/codeforge_storage_service.dart';
+import 'package:flutter/gestures.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +73,14 @@ class CodeforgeApp extends StatelessWidget {
         ),
       ),
       home: const MainScreen(),
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+        },
+        physics: const ClampingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
+      ),
     );
   }
 }
