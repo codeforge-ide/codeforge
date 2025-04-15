@@ -12,6 +12,7 @@ import 'package:highlight/languages/python.dart';
 import 'package:highlight/languages/javascript.dart';
 import '../services/tab_manager_service.dart';
 import 'markdown_preview.dart';
+import 'main_screen.dart';
 
 class CodeEditor extends StatefulWidget {
   const CodeEditor({super.key});
@@ -93,11 +94,11 @@ class CodeEditorState extends State<CodeEditor> {
         case 'command_palette':
           // You can trigger the command palette here, e.g. via a callback
           if (context
-                  .findAncestorStateOfType<_MainScreenState>()
+                  .findAncestorStateOfType<MainScreenState>()
                   ?._toggleCommandPalette !=
               null) {
             context
-                .findAncestorStateOfType<_MainScreenState>()!
+                .findAncestorStateOfType<MainScreenState>()!
                 ._toggleCommandPalette();
           }
           break;
