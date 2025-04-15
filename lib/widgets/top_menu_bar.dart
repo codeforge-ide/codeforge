@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 class TopMenuBar extends StatelessWidget {
   final void Function(String) onMenuSelected;
@@ -106,14 +107,27 @@ class TopMenuBar extends StatelessWidget {
             ),
             // --- Custom Window Buttons ---
             const SizedBox(width: 8),
-            WindowTitleBarBox(
-              child: Row(
-                children: [
-                  MinimizeWindowButton(),
-                  MaximizeWindowButton(),
-                  CloseWindowButton(),
-                ],
-              ),
+            ResizableContainer(
+              direction: Axis.horizontal,
+              children: [
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: WindowTitleBarBox(
+                    child: Row(
+                      children: [
+                        MinimizeWindowButton(),
+                        IconButton(
+                          icon: Icon(Icons.crop_square),
+                          tooltip: 'Maximize/Restore',
+                          splashRadius: 16,
+                          onPressed: () => appWindow.maximizeOrRestore(),
+                        ),
+                        CloseWindowButton(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
