@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 class TopMenuBar extends StatelessWidget {
   final void Function(String) onMenuSelected;
@@ -101,6 +102,17 @@ class TopMenuBar extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.space_bar),
                 onPressed: onToggleBottomBar,
+              ),
+            ),
+            // --- Custom Window Buttons ---
+            const SizedBox(width: 8),
+            WindowTitleBarBox(
+              child: Row(
+                children: [
+                  MinimizeWindowButton(),
+                  MaximizeWindowButton(),
+                  CloseWindowButton(),
+                ],
               ),
             ),
           ],

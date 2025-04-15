@@ -21,7 +21,6 @@ import 'widgets/tab_bar.dart';
 import 'widgets/bottom_tab_panel.dart';
 import 'services/codeforge_storage_service.dart';
 import 'widgets/top_menu_bar.dart';
-import 'widgets/command_palette.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';

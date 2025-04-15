@@ -39,24 +39,23 @@ static void my_application_activate(GApplication* application) {
   }
 #endif
   if (use_header_bar) {
-    GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-    gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "codeforge");
-    gtk_header_bar_set_show_close_button(header_bar, TRUE);
-    gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
+    // REMOVE the GTK header bar for a true frameless window
+    // GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
+    // gtk_widget_show(GTK_WIDGET(header_bar));
+    // gtk_header_bar_set_title(header_bar, "codeforge");
+    // gtk_header_bar_set_show_close_button(header_bar, TRUE);
+    // gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "codeforge");
+    // REMOVE the fallback title as well
+    // gtk_window_set_title(window, "codeforge");
   }
-
-  // gtk_window_set_default_size(window, 1280, 720);
-  // gtk_widget_show(GTK_WIDGET(window));
 
   auto bdw = bitsdojo_window_from(window);            // <--- add this line
   bdw->setCustomFrame(true);                          // <-- add this line
   //gtk_window_set_default_size(window, 1280, 720);   // <-- comment this line
   gtk_widget_show(GTK_WIDGET(window));
 
-  //bitsdojo_window nf
+  //bitsdojo_window 
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
