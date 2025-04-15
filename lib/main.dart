@@ -187,22 +187,17 @@ class _MainScreenState extends State<MainScreen> {
           onDrop: _handleFileDrop,
           child: Column(
             children: [
-              // Top menu and tabs
-              Column(
-                children: [
-                  AppBar(
-                    title: const Text('Codeforge IDE'),
-                    automaticallyImplyLeading: false,
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.settings),
-                        onPressed: () {
-                          // Show settings dialog
-                        },
-                      ),
-                    ],
+              // Top menu
+              AppBar(
+                title: const Text('Codeforge IDE'),
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () {
+                      // Show settings dialog
+                    },
                   ),
-                  const EditorTabBar(),
                 ],
               ),
 
@@ -288,6 +283,8 @@ class _MainScreenState extends State<MainScreen> {
                     Expanded(
                       child: Column(
                         children: [
+                          // Move EditorTabBar here so it appears above the editor, not above the sidebar
+                          const EditorTabBar(),
                           // Editor area
                           Expanded(
                             child: const CodeEditor(),

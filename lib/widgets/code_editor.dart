@@ -5,7 +5,7 @@ import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:highlight/languages/dart.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:highlight/languages/javascript.dart';
-import '../models/editor_state.dart';
+import '../services/tab_manager_service.dart';
 
 class CodeEditor extends StatefulWidget {
   const CodeEditor({super.key});
@@ -29,12 +29,17 @@ class CodeEditorState extends State<CodeEditor> {
   }
 
   void _initializeController() {
-    final editorState = context.read<EditorState>();
-    _codeController = CodeController(
-      text: editorState.content,
-      language: _languageMap[editorState.language] ?? dart,
-      patternMap: monokaiSublimeTheme,
-    );
+    final tabManager = context.read<TabManagerService>();
+    final activeTab = tabManager.activeTab;
+    final editorState = activeTab?.editorState;
+
+    if (editorState != null) {
+      _codeController = CodeController(
+        text: editorState.content,
+        language: _languageMap[editorState.language] ?? dart,
+        patternMap: monokaiSublimeTheme,
+      );
+    }
   }
 
   @override
@@ -43,30 +48,19 @@ class CodeEditorState extends State<CodeEditor> {
     super.dispose();
   }
 
-  void _handleLanguageChange(String? newLanguage) {
-    if (newLanguage != null) {
-      final editorState = context.read<EditorState>();
-      editorState.setLanguage(newLanguage);
-
-      setState(() {
-        final oldContent = _codeController?.text ?? '';
-        _codeController?.dispose();
-        _codeController = CodeController(
-          text: oldContent,
-          language: _languageMap[newLanguage] ?? dart,
-          patternMap: monokaiSublimeTheme,
-        );
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final editorState = context.watch<EditorState>();
+    final tabManager = context.watch<TabManagerService>();
+    final activeTab = tabManager.activeTab;
+    final editorState = activeTab?.editorState;
+
+    if (editorState == null) {
+      return const Center(child: Text('No file open'));
+    }
+
     final language = editorState.language;
     final content = editorState.content;
 
-    // Recreate controller if language or content changes
     _codeController ??= CodeController(
       text: content,
       language: _languageMap[language] ?? dart,
@@ -93,21 +87,39 @@ class CodeEditorState extends State<CodeEditor> {
                     child: Text(lang.toUpperCase()),
                   );
                 }).toList(),
-                onChanged: _handleLanguageChange,
+                onChanged: (newLanguage) {
+                  if (newLanguage != null) {
+                    editorState.setLanguage(newLanguage);
+                    setState(() {
+                      _codeController?.language =
+                          _languageMap[newLanguage] ?? dart;
+                    });
+                  }
+                },
               ),
             ],
           ),
         ),
         Expanded(
-          child: _codeController == null
-              ? const Center(child: CircularProgressIndicator())
-              : CodeField(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SizedBox(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                child: CodeField(
                   controller: _codeController!,
                   onChanged: (content) {
-                    context.read<EditorState>().updateContent(content);
+                    editorState.updateContent(content);
                   },
                   textStyle: const TextStyle(fontFamily: 'monospace'),
+                  expands:
+                      true, // This makes CodeField fill and scroll within its area
+                  maxLines: null, // Allow unlimited lines
+                  minLines: null,
                 ),
+              );
+            },
+          ),
         ),
       ],
     );

@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/file_system_service.dart';
 import '../services/workspace_service.dart';
 import '../services/tab_manager_service.dart';
 import '../models/editor_state.dart';
 import '../utils/language_utils.dart';
 import 'shared/loading_overlay.dart';
-import 'shared/error_dialog.dart';
 import 'shared/file_tree.dart';
 
 class FileExplorer extends StatefulWidget {
@@ -116,6 +116,14 @@ class FileExplorerState extends State<FileExplorer> {
     }
   }
 
+  Future<void> _pickAndOpenFolder() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory != null) {
+      context.read<WorkspaceService>().addWorkspace(selectedDirectory);
+      await _loadEntities(selectedDirectory);
+    }
+  }
+
   void _toggleFolderExpand(String path) {
     setState(() {
       _expandedFolders[path] = !(_expandedFolders[path] ?? false);
@@ -221,11 +229,7 @@ class FileExplorerState extends State<FileExplorer> {
                       const Text('No workspace opened'),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () async {
-                          // TODO: Implement folder picker dialog
-                          // For now, just refresh workspace
-                          await _refreshWorkspace();
-                        },
+                        onPressed: _pickAndOpenFolder,
                         child: const Text('Open Folder'),
                       ),
                     ],
