@@ -17,6 +17,13 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+// Correct forward declaration for the method call handler using FlMethodResponseHandle
+static void window_control_method_call(
+  FlMethodChannel* channel,
+  FlMethodCall* method_call,
+  FlMethodResponseHandle* response_handle, // Use FlMethodResponseHandle*
+  gpointer user_data);
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
@@ -67,12 +74,19 @@ static void my_application_activate(GApplication* application) {
 
   FlView* view = fl_view_new(project);
 
-  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
-    fl_engine_get_binary_messenger(fl_view_get_engine(view)),
-    "window_control_channel",
-    FL_METHOD_CODEC(fl_standard_method_codec_new()));
-  fl_method_channel_set_method_call_handler(channel, window_control_method_call, window, nullptr);
-
+  // Get messenger
+  g_autoptr(FlBinaryMessenger) messenger = fl_engine_get_binary_messenger(fl_view_get_engine(view));
+  // Create codec
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  // Create channel
+  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(messenger,
+                                                           "window_control_channel",
+                                                           FL_METHOD_CODEC(codec));
+  // Set the handler with the correct signature
+  fl_method_channel_set_method_call_handler(channel,
+                                          window_control_method_call,
+                                          window, // user_data
+                                          nullptr); // destroy_notify
 
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
@@ -82,29 +96,33 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
-
-static FlMethodResponse* window_control_method_call(
+// Correct implementation of the method call handler using FlMethodResponseHandle
+static void window_control_method_call(
   FlMethodChannel* channel,
   FlMethodCall* method_call,
+  FlMethodResponseHandle* response_handle, // Use FlMethodResponseHandle*
   gpointer user_data) {
-GtkWindow* window = GTK_WINDOW(user_data);
-const gchar* method = fl_method_call_get_name(method_call);
+  GtkWindow* window = GTK_WINDOW(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
 
-if (strcmp(method, "maximize") == 0) {
-  gtk_window_maximize(window);
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
-} else if (strcmp(method, "unmaximize") == 0) {
-  gtk_window_unmaximize(window);
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
-} else if (strcmp(method, "isMaximized") == 0) {
-  gboolean maximized = gtk_window_is_maximized(window);
-  g_autoptr(FlValue) result = fl_value_new_bool(maximized);
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  if (strcmp(method, "maximize") == 0) {
+    gtk_window_maximize(window);
+    // Use fl_method_channel_respond_success with response_handle
+    fl_method_channel_respond_success(channel, response_handle, nullptr, nullptr);
+  } else if (strcmp(method, "unmaximize") == 0) {
+    gtk_window_unmaximize(window);
+    // Use fl_method_channel_respond_success with response_handle
+    fl_method_channel_respond_success(channel, response_handle, nullptr, nullptr);
+  } else if (strcmp(method, "isMaximized") == 0) {
+    gboolean maximized = gtk_window_is_maximized(window);
+    g_autoptr(FlValue) result = fl_value_new_bool(maximized);
+    // Use fl_method_channel_respond_success with response_handle
+    fl_method_channel_respond_success(channel, response_handle, result, nullptr);
+  } else {
+    // Use fl_method_channel_respond_not_implemented with response_handle
+    fl_method_channel_respond_not_implemented(channel, response_handle, nullptr);
+  }
 }
-
-return FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-}
-
 
 // Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application, gchar*** arguments, int* exit_status) {
