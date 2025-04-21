@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0.0
+Name=codeforge
+GenericName=codeforge
+Comment=AI focused code IDE!
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=Flutter;
+Icon=codeforge
