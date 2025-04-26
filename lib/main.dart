@@ -25,16 +25,29 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
-void main() async {
+// Accept command-line arguments
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final settingsService = await SettingsService.create();
+  final workspaceService = WorkspaceService(); // Create instance early
+
+  // If a path argument is provided, try to open it as a workspace
+  if (args.isNotEmpty) {
+    final path = args.first;
+    // You might want to add error handling or validation here
+    // to ensure the path is valid before adding it.
+    workspaceService.addWorkspace(path); // Use the service to add the workspace
+    // Optionally, store it as a recent workspace
+    await CodeforgeStorageService.addRecentWorkspace(path);
+  }
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => EditorState()),
-        ChangeNotifierProvider(create: (_) => WorkspaceService()),
+        // Use the pre-created instance
+        ChangeNotifierProvider.value(value: workspaceService),
         ChangeNotifierProvider(create: (_) => TabManagerService()),
         ChangeNotifierProvider(create: (_) => ThemeService()),
         ChangeNotifierProvider.value(value: settingsService),
@@ -263,8 +276,8 @@ class MainScreenState extends State<MainScreen> {
                 workspaceName: context
                     .watch<WorkspaceService>()
                     .activeWorkspace
-                    ?.split('/')
-                    ?.last,
+                    ?.split('/') // Reverted: Keep null-aware operator
+                    ?.last,      // Reverted: Keep null-aware operator
                 onToggleSidebar: _toggleLeftSidebar,
                 onToggleSecondarySidebar: _toggleRightSidebar,
                 onToggleBottomBar: _toggleBottomPanel,
