@@ -1,15 +1,9 @@
 #include "my_application.h"
-#include <bitsdojo_window_linux/bitsdojo_window_plugin.h>
 
 #include <flutter_linux/flutter_linux.h>
-#include <flutter_linux/fl_method_channel.h>
-#include <flutter_linux/fl_method_response.h>
-#include <flutter_linux/fl_binary_messenger.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
-#include <cstring>
-#include <gtk/gtk.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -20,43 +14,11 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
-// Window control method handler with direct callback style
-static void window_control_method_call(
-  FlMethodChannel* channel,
-  FlMethodCall* method_call,
-  gpointer user_data) {
-  GtkWindow* window = GTK_WINDOW(user_data);
-  const gchar* method = fl_method_call_get_name(method_call);
-
-  if (strcmp(method, "maximize") == 0) {
-    gtk_window_maximize(window);
-    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(NULL));
-    fl_method_call_respond(method_call, response, NULL);
-  } else if (strcmp(method, "unmaximize") == 0) {
-    gtk_window_unmaximize(window);
-    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(NULL));
-    fl_method_call_respond(method_call, response, NULL);
-  } else if (strcmp(method, "isMaximized") == 0) {
-    gboolean maximized = gtk_window_is_maximized(window);
-    g_autoptr(FlValue) result = fl_value_new_bool(maximized);
-    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-    fl_method_call_respond(method_call, response, NULL);
-  } else {
-    g_autoptr(FlMethodResponse) response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-    fl_method_call_respond(method_call, response, NULL);
-  }
-}
-
-
-
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
-
-  // Ensure the window is resizable
-  gtk_window_set_resizable(window, TRUE);
 
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
@@ -76,43 +38,22 @@ static void my_application_activate(GApplication* application) {
   }
 #endif
   if (use_header_bar) {
-    // REMOVE the GTK header bar for a true frameless window
-    // GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-    // gtk_widget_show(GTK_WIDGET(header_bar));
-    // gtk_header_bar_set_title(header_bar, "codeforge");
-    // gtk_header_bar_set_show_close_button(header_bar, TRUE);
-    // gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
+    GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
+    gtk_widget_show(GTK_WIDGET(header_bar));
+    gtk_header_bar_set_title(header_bar, "codeforge");
+    gtk_header_bar_set_show_close_button(header_bar, TRUE);
+    gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    // REMOVE the fallback title as well
-    // gtk_window_set_title(window, "codeforge");
+    gtk_window_set_title(window, "codeforge");
   }
 
-  auto bdw = bitsdojo_window_from(window);            // <--- add this line
-  bdw->setCustomFrame(true);                          // <-- add this line
-  //gtk_window_set_default_size(window, 1280, 720);   // <-- comment this line
+  gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
-
-  //bitsdojo_window 
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
-
-  // Get messenger
-  g_autoptr(FlBinaryMessenger) messenger = fl_engine_get_binary_messenger(fl_view_get_engine(view));
-  // Create codec
-  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-  // Create channel
-  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(messenger,
-                                                           "window_control_channel",
-                                                           FL_METHOD_CODEC(codec));
-  // Set the handler with the updated signature
-  fl_method_channel_set_method_call_handler(channel,
-                                          window_control_method_call,
-                                          window, // user_data
-                                          nullptr); // destroy_notify
-
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
@@ -120,7 +61,6 @@ static void my_application_activate(GApplication* application) {
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
-
 
 // Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application, gchar*** arguments, int* exit_status) {
