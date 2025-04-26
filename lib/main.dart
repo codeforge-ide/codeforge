@@ -277,7 +277,7 @@ class MainScreenState extends State<MainScreen> {
                     .watch<WorkspaceService>()
                     .activeWorkspace
                     ?.split('/') // Reverted: Keep null-aware operator
-                    ?.last,      // Reverted: Keep null-aware operator
+                    ?.last, // Reverted: Keep null-aware operator
                 onToggleSidebar: _toggleLeftSidebar,
                 onToggleSecondarySidebar: _toggleRightSidebar,
                 onToggleBottomBar: _toggleBottomPanel,
