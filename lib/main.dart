@@ -26,6 +26,7 @@ import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'widgets/buttons/buttonColors.dart';
 // import 'widgets/editor_tab_bar.dart'; // Removed missing import
+import 'widgets/command_palette.dart';
 
 // Accept command-line arguments
 void main(List<String> args) async {
@@ -242,211 +243,243 @@ class MainScreenState extends State<MainScreen> {
     final workspaceName =
         workspaceService.activeWorkspace?.split('/').last ?? 'No Workspace';
 
-    return RawKeyboardListener(
-      focusNode: _keyboardFocusNode,
-      autofocus: true,
-      onKey: (RawKeyEvent event) {
-        // Handle keyboard shortcuts
-        if (event is RawKeyDownEvent) {
-          // Support both Ctrl+Shift+P and Cmd+Shift+P (for Mac)
-          final isCtrlOrCmd = event.isControlPressed || event.isMetaPressed;
-          if (isCtrlOrCmd &&
-              event.isShiftPressed &&
-              (event.logicalKey == LogicalKeyboardKey.keyP ||
-                  event.logicalKey.keyLabel.toLowerCase() == 'p')) {
-            _toggleCommandPalette();
-          }
-          // Cmd/Ctrl + B: Toggle sidebar
-          else if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyB) {
-            _toggleLeftSidebar();
-          }
-          // Cmd/Ctrl + J: Toggle bottom panel
-          else if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyJ) {
-            _toggleBottomPanel();
-          }
-          // Cmd/Ctrl + Shift + F: Search
-          else if (isCtrlOrCmd &&
-              event.isShiftPressed &&
-              event.logicalKey == LogicalKeyboardKey.keyF) {
-            _toggleSearchPanel();
-          }
-        }
-      },
-      child: Scaffold(
-        // Ensure no AppBar is present here
-        body: WindowBorder(
-          // Wrap body with WindowBorder
-          color: Theme.of(context).dividerColor, // Use theme color for border
-          width: 1,
-          child: Column(
-            // Main content column
-            children: [
-              // Top bar area combining TopMenuBar and WindowButtons
-              SizedBox(
-                // Constrain the height of the top bar
-                height: 30, // Adjust height as needed (e.g., kToolbarHeight)
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: MoveWindow(
-                        // Make the TopMenuBar area draggable
-                        child: TopMenuBar(
-                          // Pass necessary callbacks and data
-                          // Example properties (ensure these match your TopMenuBar constructor):
-                          onMenuSelected: (menu) {/* TODO */},
-                          onCommandPalette: _toggleCommandPalette,
-                          workspaceName: workspaceName,
-                          onToggleSidebar: _toggleLeftSidebar,
-                          onToggleSecondarySidebar: _toggleRightSidebar,
-                          onToggleBottomBar: _toggleBottomPanel,
-                          onCustomizeLayout: () {/* TODO */},
-                          // Add other required parameters for TopMenuBar
-                        ),
-                      ),
-                    ),
-                    // WindowButtons(
-                    //   // Add the standard window buttons
-                    //   buttonColors: buttonColors,
-                    //   closeButtonColors: closeButtonColors,
-                    // ),
+    Widget commandPaletteOverlay = const SizedBox.shrink();
+    if (_showCommandPalette) {
+      commandPaletteOverlay = CommandPalette(
+        onToggleLightDark: () {
+          _toggleLightDarkMode();
+          setState(() => _showCommandPalette = false);
+        },
+        onToggleHighContrast: () {
+          _toggleHighContrast();
+          setState(() => _showCommandPalette = false);
+        },
+        onToggleUltraDark: () {
+          _toggleUltraDark();
+          setState(() => _showCommandPalette = false);
+        },
+        isDarkMode: Theme.of(context).brightness == Brightness.dark,
+        isHighContrast: _isHighContrast,
+        isUltraDark: _isUltraDark,
+      );
+    }
 
-                    // Row(
-                    //   children: [
-                    //     MinimizeWindowButton(colors: buttonColors),
-                    //     MaximizeWindowButton(colors: buttonColors),
-                    //     CloseWindowButton(colors: closeButtonColors),
-                    //   ],
-                    // )
-                  ],
-                ),
-              ),
-              // The rest of the application content
-              Expanded(
-                child: WorkspaceDropArea(
-                  // Your existing main content area
-                  onDrop: _handleFileDrop, // Ensure this callback is correct
-                  child: ResizableContainer(
-                    // The main resizable layout
-                    controller: _mainController,
-                    direction: Axis.horizontal,
-                    children: [
-                      // Primary sidebar (Activity Bar)
-                      if (_showLeftSidebar)
-                        ResizableChild(
-                          size: const ResizableSize.pixels(48),
-                          child: Material(
-                            // Use Material for background color
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceVariant, // Example color
-                            child: Column(
-                              children: [
-                                const SizedBox(
-                                    height:
-                                        8), // Spacing from top (under MoveWindow area)
-                                _buildSidebarIconButton(
-                                    0,
-                                    Icons.description_outlined,
-                                    'Explorer'), // Example icons
-                                _buildSidebarIconButton(
-                                    1, Icons.merge_type, 'Source Control'),
-                                _buildSidebarIconButton(
-                                    2, Icons.search, 'Search'),
-                                const Spacer(),
-                                IconButton(
-                                  icon: const Icon(Icons.settings_outlined),
-                                  onPressed: () {/* TODO: Open settings */},
-                                  tooltip: 'Manage',
+    return Stack(
+      children: [
+        RawKeyboardListener(
+          focusNode: _keyboardFocusNode,
+          autofocus: true,
+          onKey: (RawKeyEvent event) {
+            // Handle keyboard shortcuts
+            if (event is RawKeyDownEvent) {
+              // Support both Ctrl+Shift+P and Cmd+Shift+P (for Mac)
+              final isCtrlOrCmd = event.isControlPressed || event.isMetaPressed;
+              if (isCtrlOrCmd &&
+                  event.isShiftPressed &&
+                  (event.logicalKey == LogicalKeyboardKey.keyP ||
+                      event.logicalKey.keyLabel.toLowerCase() == 'p')) {
+                _toggleCommandPalette();
+              }
+              // Cmd/Ctrl + B: Toggle sidebar
+              else if (isCtrlOrCmd &&
+                  event.logicalKey == LogicalKeyboardKey.keyB) {
+                _toggleLeftSidebar();
+              }
+              // Cmd/Ctrl + J: Toggle bottom panel
+              else if (isCtrlOrCmd &&
+                  event.logicalKey == LogicalKeyboardKey.keyJ) {
+                _toggleBottomPanel();
+              }
+              // Cmd/Ctrl + Shift + F: Search
+              else if (isCtrlOrCmd &&
+                  event.isShiftPressed &&
+                  event.logicalKey == LogicalKeyboardKey.keyF) {
+                _toggleSearchPanel();
+              }
+            }
+          },
+          child: Scaffold(
+            // Ensure no AppBar is present here
+            body: WindowBorder(
+              // Wrap body with WindowBorder
+              color:
+                  Theme.of(context).dividerColor, // Use theme color for border
+              width: 1,
+              child: Column(
+                // Main content column
+                children: [
+                  // Top bar area combining TopMenuBar and WindowButtons
+                  SizedBox(
+                    // Constrain the height of the top bar
+                    height:
+                        30, // Adjust height as needed (e.g., kToolbarHeight)
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: MoveWindow(
+                            // Make the TopMenuBar area draggable
+                            child: TopMenuBar(
+                              // Pass necessary callbacks and data
+                              // Example properties (ensure these match your TopMenuBar constructor):
+                              onMenuSelected: (menu) {/* TODO */},
+                              onCommandPalette: _toggleCommandPalette,
+                              workspaceName: workspaceName,
+                              onToggleSidebar: _toggleLeftSidebar,
+                              onToggleSecondarySidebar: _toggleRightSidebar,
+                              onToggleBottomBar: _toggleBottomPanel,
+                              onCustomizeLayout: () {/* TODO */},
+                              // Add other required parameters for TopMenuBar
+                            ),
+                          ),
+                        ),
+                        // WindowButtons(
+                        //   // Add the standard window buttons
+                        //   buttonColors: buttonColors,
+                        //   closeButtonColors: closeButtonColors,
+                        // ),
+
+                        // Row(
+                        //   children: [
+                        //     MinimizeWindowButton(colors: buttonColors),
+                        //     MaximizeWindowButton(colors: buttonColors),
+                        //     CloseWindowButton(colors: closeButtonColors),
+                        //   ],
+                        // )
+                      ],
+                    ),
+                  ),
+                  // The rest of the application content
+                  Expanded(
+                    child: WorkspaceDropArea(
+                      // Your existing main content area
+                      onDrop:
+                          _handleFileDrop, // Ensure this callback is correct
+                      child: ResizableContainer(
+                        // The main resizable layout
+                        controller: _mainController,
+                        direction: Axis.horizontal,
+                        children: [
+                          // Primary sidebar (Activity Bar)
+                          if (_showLeftSidebar)
+                            ResizableChild(
+                              size: const ResizableSize.pixels(48),
+                              child: Material(
+                                // Use Material for background color
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceVariant, // Example color
+                                child: Column(
+                                  children: [
+                                    const SizedBox(
+                                        height:
+                                            8), // Spacing from top (under MoveWindow area)
+                                    _buildSidebarIconButton(
+                                        0,
+                                        Icons.description_outlined,
+                                        'Explorer'), // Example icons
+                                    _buildSidebarIconButton(
+                                        1, Icons.merge_type, 'Source Control'),
+                                    _buildSidebarIconButton(
+                                        2, Icons.search, 'Search'),
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.settings_outlined),
+                                      onPressed: () {/* TODO: Open settings */},
+                                      tooltip: 'Manage',
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
                                 ),
-                                const SizedBox(height: 8),
+                              ),
+                            ),
+
+                          // Sidebar content (File Explorer, Search, etc.)
+                          if (_showLeftSidebar)
+                            ResizableChild(
+                              size: const ResizableSize.ratio(0.2, min: 150),
+                              child: Container(
+                                // Use Container for background
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surface, // Example color
+                                child: IndexedStack(
+                                  // Use IndexedStack to switch views
+                                  index: _selectedLeftSidebarIndex,
+                                  children: _leftSidebarViews,
+                                ),
+                              ),
+                            ),
+
+                          // Main editor area + Right Sidebar
+                          ResizableChild(
+                            size: const ResizableSize.expand(),
+                            child: ResizableContainer(
+                              controller: _editorController,
+                              direction: Axis
+                                  .horizontal, // Split editor and right sidebar
+                              children: [
+                                // Editor + Bottom Panel Column
+                                ResizableChild(
+                                  size: const ResizableSize.expand(),
+                                  child: Column(
+                                    children: [
+                                      // const EditorTabBar(), // Removed missing widget
+                                      const Expanded(
+                                        child:
+                                            CodeEditor(), // Ensure CodeEditor is imported/defined
+                                      ),
+                                      // Bottom Panel (Conditional and Vertically Resizable)
+                                      if (_showBottomPanel)
+                                        const Flexible(
+                                          // Wrap ResizableContainer with Flexible
+                                          child: ResizableContainer(
+                                            direction: Axis.vertical,
+                                            // controller: _bottomPanelController, // Add if you need to control this specific resize
+                                            children: [
+                                              ResizableChild(
+                                                size: ResizableSize.ratio(0.25,
+                                                    min: 100),
+                                                // Remove invalid parameters from BottomTabPanel
+                                                child:
+                                                    BottomTabPanel(), // Ensure BottomTabPanel is imported
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Right Sidebar (e.g., AI Pane)
+                                if (_showRightSidebar)
+                                  ResizableChild(
+                                    size: const ResizableSize.ratio(0.2,
+                                        min: 150),
+                                    child: IndexedStack(
+                                      // Use IndexedStack if multiple right panels possible
+                                      index:
+                                          0, // Assuming only one right sidebar view for now
+                                      children: _rightSidebarViews,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
-                        ),
-
-                      // Sidebar content (File Explorer, Search, etc.)
-                      if (_showLeftSidebar)
-                        ResizableChild(
-                          size: const ResizableSize.ratio(0.2, min: 150),
-                          child: Container(
-                            // Use Container for background
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surface, // Example color
-                            child: IndexedStack(
-                              // Use IndexedStack to switch views
-                              index: _selectedLeftSidebarIndex,
-                              children: _leftSidebarViews,
-                            ),
-                          ),
-                        ),
-
-                      // Main editor area + Right Sidebar
-                      ResizableChild(
-                        size: const ResizableSize.expand(),
-                        child: ResizableContainer(
-                          controller: _editorController,
-                          direction:
-                              Axis.horizontal, // Split editor and right sidebar
-                          children: [
-                            // Editor + Bottom Panel Column
-                            ResizableChild(
-                              size: const ResizableSize.expand(),
-                              child: Column(
-                                children: [
-                                  // const EditorTabBar(), // Removed missing widget
-                                  const Expanded(
-                                    child:
-                                        CodeEditor(), // Ensure CodeEditor is imported/defined
-                                  ),
-                                  // Bottom Panel (Conditional and Vertically Resizable)
-                                  if (_showBottomPanel)
-                                    const Flexible(
-                                      // Wrap ResizableContainer with Flexible
-                                      child: ResizableContainer(
-                                        direction: Axis.vertical,
-                                        // controller: _bottomPanelController, // Add if you need to control this specific resize
-                                        children: [
-                                          ResizableChild(
-                                            size: ResizableSize.ratio(0.25,
-                                                min: 100),
-                                            // Remove invalid parameters from BottomTabPanel
-                                            child:
-                                                BottomTabPanel(), // Ensure BottomTabPanel is imported
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-
-                            // Right Sidebar (e.g., AI Pane)
-                            if (_showRightSidebar)
-                              ResizableChild(
-                                size: const ResizableSize.ratio(0.2, min: 150),
-                                child: IndexedStack(
-                                  // Use IndexedStack if multiple right panels possible
-                                  index:
-                                      0, // Assuming only one right sidebar view for now
-                                  children: _rightSidebarViews,
-                                ),
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  // Status bar at the bottom
+                  const StatusBar(), // Ensure StatusBar is imported/defined
+                ],
               ),
-              // Status bar at the bottom
-              const StatusBar(), // Ensure StatusBar is imported/defined
-            ],
+            ),
+            // Remove floatingActionButton and endDrawer if they are no longer needed
+            // or integrate their toggling logic differently (e.g., via TopMenuBar)
           ),
         ),
-        // Remove floatingActionButton and endDrawer if they are no longer needed
-        // or integrate their toggling logic differently (e.g., via TopMenuBar)
-      ),
+        commandPaletteOverlay,
+      ],
     );
   }
 
