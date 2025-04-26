@@ -61,11 +61,13 @@ void main(List<String> args) async {
 
   doWhenWindowReady(() {
     final win = appWindow;
-    const initialSize = Size(1200, 800);
+    const initialSize = Size(600, 450);
     win.minSize = initialSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
-    win.title = ""; // Remove window title
+    // win.title = ""; // Remove window title
+    // win.titleBarStyle = TitleBarStyle.hidden; // Add this line
+
     win.show();
   });
 }

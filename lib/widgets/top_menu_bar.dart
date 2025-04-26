@@ -1,3 +1,4 @@
+import 'package:codeforge/widgets/buttons/buttonColors.dart';
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -126,21 +127,22 @@ class TopMenuBar extends StatelessWidget {
           // Window buttons (not draggable)
           Row(
             children: [
-              MinimizeWindowButton(),
+              MinimizeWindowButton(colors: buttonColors),
               // Replace MaximizeWindowButton with a custom maximize button using WindowChannel
-              IconButton(
-                icon: const Icon(Icons.crop_square),
-                tooltip: 'Maximize/Restore',
-                onPressed: () async {
-                  final maximized = await WindowChannel.isMaximized();
-                  if (maximized) {
-                    await WindowChannel.unmaximize();
-                  } else {
-                    await WindowChannel.maximize();
-                  }
-                },
-              ),
-              CloseWindowButton(),
+              // IconButton(
+              //   icon: const Icon(Icons.crop_square),
+              //   tooltip: 'Maximize/Restore',
+              //   onPressed: () async {
+              //     final maximized = await WindowChannel.isMaximized();
+              //     if (maximized) {
+              //       await WindowChannel.unmaximize();
+              //     } else {
+              //       await WindowChannel.maximize();
+              //     }
+              //   },
+              // ),
+              MaximizeWindowButton(colors: buttonColors),
+              CloseWindowButton(colors: closeButtonColors),
             ],
           ),
         ],
@@ -151,10 +153,9 @@ class TopMenuBar extends StatelessWidget {
   Widget _buildMenu(String label) {
     return PopupMenuButton<String>(
       onSelected: onMenuSelected,
-      itemBuilder:
-          (context) => [
-            PopupMenuItem(value: '$label:dummy', child: Text('Coming soon...')),
-          ],
+      itemBuilder: (context) => [
+        PopupMenuItem(value: '$label:dummy', child: Text('Coming soon...')),
+      ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Text(
