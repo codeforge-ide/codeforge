@@ -24,6 +24,7 @@ import 'widgets/top_menu_bar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'widgets/buttons/buttonColors.dart';
 
 // Accept command-line arguments
 void main(List<String> args) async {
@@ -265,152 +266,174 @@ class MainScreenState extends State<MainScreen> {
         }
       },
       child: Scaffold(
-        body: WorkspaceDropArea(
-          onDrop: _handleFileDrop,
+        // Ensure no AppBar is present here
+        body: WindowBorder(
+          // Wrap body with WindowBorder
+          color: Theme.of(context).dividerColor, // Use theme color for border
+          width: 1,
           child: Column(
+            // Main content column
             children: [
-              // Top menu bar and command palette
-              TopMenuBar(
-                onMenuSelected: (menu) {
-                  // TODO: Add menu actions
-                },
-                onCommandPalette: _toggleCommandPalette,
-                workspaceName: context
-                    .watch<WorkspaceService>()
-                    .activeWorkspace
-                    ?.split('/') // Reverted: Keep null-aware operator
-                    ?.last, // Reverted: Keep null-aware operator
-                onToggleSidebar: _toggleLeftSidebar,
-                onToggleSecondarySidebar: _toggleRightSidebar,
-                onToggleBottomBar: _toggleBottomPanel,
-                onCustomizeLayout: () {
-                  // TODO: Show layout customization dialog
-                },
-              ),
-
-              // Main content
-              Expanded(
-                child: ResizableContainer(
-                  controller: _mainController,
-                  direction: Axis.horizontal,
+              // Top bar area combining TopMenuBar and WindowButtons
+              SizedBox(
+                // Constrain the height of the top bar
+                height: 30, // Adjust height as needed (e.g., kToolbarHeight)
+                child: Row(
                   children: [
-                    // Primary sidebar
-                    if (_showLeftSidebar)
-                      ResizableChild(
-                        size: ResizableSize.pixels(48, min: 40, max: 80),
-                        divider: ResizableDivider(
-                            thickness: 3, color: Colors.grey[700]),
-                        child: Material(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .background
-                              .withOpacity(0.9),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 8),
-                              _buildSidebarIconButton(
-                                0,
-                                Icons.folder,
-                                'Explorer',
-                                tooltip: 'Explorer (Ctrl+Shift+E)',
-                              ),
-                              _buildSidebarIconButton(
-                                1,
-                                Icons.source,
-                                'Source Control',
-                                tooltip: 'Source Control (Ctrl+Shift+G)',
-                              ),
-                              _buildSidebarIconButton(
-                                2,
-                                Icons.search,
-                                'Search',
-                                tooltip: 'Search (Ctrl+Shift+F)',
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.settings),
-                                onPressed: () {
-                                  // Open settings
-                                },
-                                tooltip: 'Settings',
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
+                    Expanded(
+                      child: MoveWindow(
+                        // Make the TopMenuBar area draggable
+                        child: TopMenuBar(
+                          // Pass necessary callbacks and data
+                          // Example properties (ensure these match your TopMenuBar constructor):
+                          onMenuSelected: (menu) {/* TODO */},
+                          onCommandPalette: _toggleCommandPalette,
+                          workspaceName: context
+                              .watch<WorkspaceService>()
+                              .activeWorkspace
+                              ?.split('/')
+                              .last,
+                          onToggleSidebar: _toggleLeftSidebar,
+                          onToggleSecondarySidebar: _toggleRightSidebar,
+                          onToggleBottomBar: _toggleBottomPanel,
+                          onCustomizeLayout: () {/* TODO */},
+                          // Add other required parameters for TopMenuBar
                         ),
                       ),
-
-                    // Sidebar content
-                    if (_showLeftSidebar)
-                      ResizableChild(
-                        size: ResizableSize.ratio(0.2, min: 100, max: 400),
-                        divider: ResizableDivider(
-                            thickness: 3, color: Colors.grey[700]),
-                        child: Container(
-                          color: Theme.of(context).colorScheme.background,
-                          child: _leftSidebarViews[_selectedLeftSidebarIndex],
-                        ),
-                      ),
-
-                    // Main editor + right sidebar
-                    ResizableChild(
-                      size: ResizableSize.expand(),
-                      child: ResizableContainer(
-                        controller: _editorController,
-                        direction: Axis.horizontal,
-                        children: [
-                          // Editor area (with tab bar and bottom panel)
-                          ResizableChild(
-                            size: ResizableSize.expand(),
-                            divider: ResizableDivider(
-                                thickness: 3, color: Colors.grey[700]),
-                            child: Column(
-                              children: [
-                                const EditorTabBar(),
-                                Expanded(
-                                  child: const CodeEditor(),
-                                ),
-                                if (_showBottomPanel)
-                                  SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.25,
-                                    child: const BottomTabPanel(),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          // Right sidebar
-                          if (_showRightSidebar)
-                            ResizableChild(
-                              size:
-                                  ResizableSize.pixels(300, min: 150, max: 500),
-                              child: _rightSidebarViews[0],
-                            ),
-                        ],
-                      ),
+                    ),
+                    WindowButtons(
+                      // Add the standard window buttons
+                      buttonColors: buttonColors,
+                      closeButtonColors: closeButtonColors,
                     ),
                   ],
                 ),
               ),
+              // The rest of the application content
+              Expanded(
+                child: WorkspaceDropArea(
+                  // Your existing main content area
+                  onDrop: _handleFileDrop, // Ensure this callback is correct
+                  child: ResizableContainer(
+                    // The main resizable layout
+                    controller: _mainController,
+                    direction: Axis.horizontal,
+                    children: [
+                      // Primary sidebar (Activity Bar)
+                      if (_showLeftSidebar)
+                        ResizableChildData(
+                          resizable: false, // Typically fixed width
+                          size: const ResizableSize.pixels(48),
+                          child: Material(
+                            // Use Material for background color
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceVariant, // Example color
+                            child: Column(
+                              children: [
+                                const SizedBox(
+                                    height:
+                                        8), // Spacing from top (under MoveWindow area)
+                                _buildSidebarIconButton(
+                                    0,
+                                    Icons.description_outlined,
+                                    'Explorer'), // Example icons
+                                _buildSidebarIconButton(
+                                    1, Icons.source_control, 'Source Control'),
+                                _buildSidebarIconButton(
+                                    2, Icons.search, 'Search'),
+                                const Spacer(),
+                                IconButton(
+                                  icon: const Icon(Icons.settings_outlined),
+                                  onPressed: () {/* TODO: Open settings */},
+                                  tooltip: 'Manage',
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          ),
+                        ),
 
-              // Status bar
-              const StatusBar(),
+                      // Sidebar content (File Explorer, Search, etc.)
+                      if (_showLeftSidebar)
+                        ResizableChildData(
+                          size: const ResizableSize.ratio(0.2),
+                          minSize: 150,
+                          child: Container(
+                            // Use Container for background
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surface, // Example color
+                            child: IndexedStack(
+                              // Use IndexedStack to switch views
+                              index: _selectedLeftSidebarIndex,
+                              children: _leftSidebarViews,
+                            ),
+                          ),
+                        ),
+
+                      // Main editor area + Right Sidebar
+                      ResizableChildData(
+                        size: const ResizableSize.expand(),
+                        child: ResizableContainer(
+                          controller: _editorController,
+                          direction:
+                              Axis.horizontal, // Split editor and right sidebar
+                          children: [
+                            // Editor + Bottom Panel Column
+                            ResizableChildData(
+                              size: const ResizableSize.expand(),
+                              child: Column(
+                                children: [
+                                  const EditorTabBar(), // Ensure EditorTabBar is imported/defined
+                                  const Expanded(
+                                    child:
+                                        CodeEditor(), // Ensure CodeEditor is imported/defined
+                                  ),
+                                  if (_showBottomPanel)
+                                    ResizableContainer(
+                                        // Make bottom panel resizable vertically
+                                        direction: Axis
+                                            .vertical, // This might need adjustment based on desired behavior
+                                        children: [
+                                          ResizableChildData(
+                                            size: const ResizableSize.ratio(
+                                                0.25), // Example size
+                                            minSize: 100,
+                                            child:
+                                                const BottomTabPanel(), // Ensure BottomTabPanel is imported/defined
+                                          ),
+                                        ]),
+                                ],
+                              ),
+                            ),
+
+                            // Right Sidebar (e.g., AI Pane)
+                            if (_showRightSidebar)
+                              ResizableChildData(
+                                size: const ResizableSize.ratio(0.2),
+                                minSize: 150,
+                                child: IndexedStack(
+                                  // Use IndexedStack if multiple right panels possible
+                                  index:
+                                      0, // Assuming only one right sidebar view for now
+                                  children: _rightSidebarViews,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Status bar at the bottom
+              const StatusBar(), // Ensure StatusBar is imported/defined
             ],
           ),
         ),
-
-        // Floating overlays
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        floatingActionButton: _showCommandPalette || _showSearchPanel
-            ? null
-            : FloatingActionButton(
-                mini: true,
-                child: const Icon(Icons.code),
-                onPressed: _toggleRightSidebar,
-              ),
-
-        // Overlays
-        endDrawer: _showRightSidebar ? null : const AIPane(),
+        // Remove floatingActionButton and endDrawer if they are no longer needed
+        // or integrate their toggling logic differently (e.g., via TopMenuBar)
       ),
     );
   }
