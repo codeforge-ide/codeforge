@@ -17,7 +17,7 @@ import 'services/theme_service.dart';
 import 'widgets/file_explorer.dart';
 import 'widgets/status_bar.dart';
 import 'widgets/search_panel.dart';
-import 'widgets/tab_bar.dart';
+// import 'widgets/tab_bar.dart'; // Assuming this is not used if EditorTabBar is removed
 import 'widgets/bottom_tab_panel.dart';
 import 'services/codeforge_storage_service.dart';
 import 'widgets/top_menu_bar.dart';
@@ -25,6 +25,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'widgets/buttons/buttonColors.dart';
+// import 'widgets/editor_tab_bar.dart'; // Removed missing import
 
 // Accept command-line arguments
 void main(List<String> args) async {
@@ -164,6 +165,7 @@ class MainScreenState extends State<MainScreen> {
   void dispose() {
     _mainController.dispose();
     _editorController.dispose();
+    _keyboardFocusNode.dispose(); // Dispose focus node
     super.dispose();
   }
 
@@ -235,6 +237,11 @@ class MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get workspace name safely
+    final workspaceService = context.watch<WorkspaceService>();
+    final workspaceName =
+        workspaceService.activeWorkspace?.split('/').last ?? 'No Workspace';
+
     return RawKeyboardListener(
       focusNode: _keyboardFocusNode,
       autofocus: true,
@@ -288,11 +295,7 @@ class MainScreenState extends State<MainScreen> {
                           // Example properties (ensure these match your TopMenuBar constructor):
                           onMenuSelected: (menu) {/* TODO */},
                           onCommandPalette: _toggleCommandPalette,
-                          workspaceName: context
-                              .watch<WorkspaceService>()
-                              .activeWorkspace
-                              ?.split('/')
-                              .last,
+                          workspaceName: workspaceName,
                           onToggleSidebar: _toggleLeftSidebar,
                           onToggleSecondarySidebar: _toggleRightSidebar,
                           onToggleBottomBar: _toggleBottomPanel,
@@ -301,11 +304,19 @@ class MainScreenState extends State<MainScreen> {
                         ),
                       ),
                     ),
-                    WindowButtons(
-                      // Add the standard window buttons
-                      buttonColors: buttonColors,
-                      closeButtonColors: closeButtonColors,
-                    ),
+                    // WindowButtons(
+                    //   // Add the standard window buttons
+                    //   buttonColors: buttonColors,
+                    //   closeButtonColors: closeButtonColors,
+                    // ),
+
+                    // Row(
+                    //   children: [
+                    //     MinimizeWindowButton(colors: buttonColors),
+                    //     MaximizeWindowButton(colors: buttonColors),
+                    //     CloseWindowButton(colors: closeButtonColors),
+                    //   ],
+                    // )
                   ],
                 ),
               ),
@@ -321,8 +332,7 @@ class MainScreenState extends State<MainScreen> {
                     children: [
                       // Primary sidebar (Activity Bar)
                       if (_showLeftSidebar)
-                        ResizableChildData(
-                          resizable: false, // Typically fixed width
+                        ResizableChild(
                           size: const ResizableSize.pixels(48),
                           child: Material(
                             // Use Material for background color
@@ -339,7 +349,7 @@ class MainScreenState extends State<MainScreen> {
                                     Icons.description_outlined,
                                     'Explorer'), // Example icons
                                 _buildSidebarIconButton(
-                                    1, Icons.source_control, 'Source Control'),
+                                    1, Icons.merge_type, 'Source Control'),
                                 _buildSidebarIconButton(
                                     2, Icons.search, 'Search'),
                                 const Spacer(),
@@ -356,9 +366,8 @@ class MainScreenState extends State<MainScreen> {
 
                       // Sidebar content (File Explorer, Search, etc.)
                       if (_showLeftSidebar)
-                        ResizableChildData(
-                          size: const ResizableSize.ratio(0.2),
-                          minSize: 150,
+                        ResizableChild(
+                          size: const ResizableSize.ratio(0.2, min: 150),
                           child: Container(
                             // Use Container for background
                             color: Theme.of(context)
@@ -373,7 +382,7 @@ class MainScreenState extends State<MainScreen> {
                         ),
 
                       // Main editor area + Right Sidebar
-                      ResizableChildData(
+                      ResizableChild(
                         size: const ResizableSize.expand(),
                         child: ResizableContainer(
                           controller: _editorController,
@@ -381,38 +390,41 @@ class MainScreenState extends State<MainScreen> {
                               Axis.horizontal, // Split editor and right sidebar
                           children: [
                             // Editor + Bottom Panel Column
-                            ResizableChildData(
+                            ResizableChild(
                               size: const ResizableSize.expand(),
                               child: Column(
                                 children: [
-                                  const EditorTabBar(), // Ensure EditorTabBar is imported/defined
+                                  // const EditorTabBar(), // Removed missing widget
                                   const Expanded(
                                     child:
                                         CodeEditor(), // Ensure CodeEditor is imported/defined
                                   ),
+                                  // Bottom Panel (Conditional and Vertically Resizable)
                                   if (_showBottomPanel)
-                                    ResizableContainer(
-                                        // Make bottom panel resizable vertically
-                                        direction: Axis
-                                            .vertical, // This might need adjustment based on desired behavior
+                                    const Flexible(
+                                      // Wrap ResizableContainer with Flexible
+                                      child: ResizableContainer(
+                                        direction: Axis.vertical,
+                                        // controller: _bottomPanelController, // Add if you need to control this specific resize
                                         children: [
-                                          ResizableChildData(
-                                            size: const ResizableSize.ratio(
-                                                0.25), // Example size
-                                            minSize: 100,
+                                          ResizableChild(
+                                            size: ResizableSize.ratio(0.25,
+                                                min: 100),
+                                            // Remove invalid parameters from BottomTabPanel
                                             child:
-                                                const BottomTabPanel(), // Ensure BottomTabPanel is imported/defined
+                                                BottomTabPanel(), // Ensure BottomTabPanel is imported
                                           ),
-                                        ]),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
 
                             // Right Sidebar (e.g., AI Pane)
                             if (_showRightSidebar)
-                              ResizableChildData(
-                                size: const ResizableSize.ratio(0.2),
-                                minSize: 150,
+                              ResizableChild(
+                                size: const ResizableSize.ratio(0.2, min: 150),
                                 child: IndexedStack(
                                   // Use IndexedStack if multiple right panels possible
                                   index:
