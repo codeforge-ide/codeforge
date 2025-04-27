@@ -24,9 +24,9 @@ import 'widgets/top_menu_bar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'widgets/buttons/buttonColors.dart';
 // import 'widgets/editor_tab_bar.dart'; // Removed missing import
 import 'widgets/command_palette.dart';
+import 'services/codeforgeai_service.dart';
 
 // Accept command-line arguments
 void main(List<String> args) async {
@@ -248,6 +248,9 @@ class MainScreenState extends State<MainScreen> {
 
     Widget commandPaletteOverlay = const SizedBox.shrink();
     if (_showCommandPalette) {
+      final codeforgeAIService = context.read<CodeforgeAIService>();
+      final config = codeforgeAIService.config ?? {};
+      final configKeys = config.keys.toList();
       commandPaletteOverlay = CommandPalette(
         onToggleLightDark: () {
           _toggleLightDarkMode();
@@ -264,6 +267,36 @@ class MainScreenState extends State<MainScreen> {
         isDarkMode: Theme.of(context).brightness == Brightness.dark,
         isHighContrast: _isHighContrast,
         isUltraDark: _isUltraDark,
+        extraActions: [
+          ...configKeys.map((key) => CommandPaletteAction(
+                title: 'Edit CodeforgeAI Config: $key',
+                onSelected: () async {
+                  // Open a settings editor for this config key
+                  final newValue = await showDialog<String>(
+                    context: context,
+                    builder: (context) => EditConfigDialog(
+                      keyName: key,
+                      initialValue: config[key]?.toString() ?? '',
+                    ),
+                  );
+                  if (newValue != null) {
+                    // Update config in memory and persist to file
+                    config[key] = newValue;
+                    await codeforgeAIService.saveConfig(config);
+                    setState(() {}); // Refresh UI
+                  }
+                  setState(() => _showCommandPalette = false);
+                },
+              )),
+          CommandPaletteAction(
+            title: 'Open CodeforgeAI Settings',
+            onSelected: () {
+              // Open the full config in an editor tab
+              _openConfigEditor();
+              setState(() => _showCommandPalette = false);
+            },
+          ),
+        ],
       );
     }
 
@@ -507,6 +540,60 @@ class MainScreenState extends State<MainScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _openConfigEditor() async {
+    final codeforgeAIService = context.read<CodeforgeAIService>();
+    final configFile = await codeforgeAIService.getConfigFile();
+    if (configFile != null) {
+      // Use your tab manager/editor logic to open the file in the editor
+      context.read<TabManagerService>().openFile(configFile.path);
+    }
+  }
+}
+
+class EditConfigDialog extends StatefulWidget {
+  final String keyName;
+  final String initialValue;
+  const EditConfigDialog(
+      {super.key, required this.keyName, required this.initialValue});
+  @override
+  State<EditConfigDialog> createState() => _EditConfigDialogState();
+}
+
+class _EditConfigDialogState extends State<EditConfigDialog> {
+  late TextEditingController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit ${widget.keyName}'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(labelText: 'Value'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }
