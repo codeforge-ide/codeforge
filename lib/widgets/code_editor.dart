@@ -32,9 +32,17 @@ class CodeEditorState extends State<CodeEditor> {
 
   List<String> get _dropdownLanguages => _languageMap.keys.toList();
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _showEditorContextMenu(
@@ -156,14 +164,17 @@ class CodeEditorState extends State<CodeEditor> {
             _showEditorContextMenu(context, event.position, codeController);
           }
         },
-        child: CodeField(
-          controller: codeController,
-          expands: true,
-          maxLines: null,
-          minLines: null,
-          textStyle: const TextStyle(fontFamily: 'monospace'),
-          onChanged: (text) => editorState.updateContent(text),
-          gutterStyle: gutterStyle,
+        child: ScrollConfiguration(
+          behavior: const _ClampingScrollBehavior(),
+          child: CodeField(
+            controller: codeController,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textStyle: const TextStyle(fontFamily: 'monospace'),
+            onChanged: (text) => editorState.updateContent(text),
+            gutterStyle: gutterStyle,
+          ),
         ),
       ),
     );
@@ -182,4 +193,11 @@ class CodeEditorState extends State<CodeEditor> {
           )
         : codeField;
   }
+}
+
+class _ClampingScrollBehavior extends ScrollBehavior {
+  const _ClampingScrollBehavior();
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const ClampingScrollPhysics();
 }

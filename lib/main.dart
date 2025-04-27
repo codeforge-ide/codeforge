@@ -139,6 +139,7 @@ class MainScreenState extends State<MainScreen> {
 
   late final ResizableController _mainController;
   late final ResizableController _editorController;
+  late final ResizableController _bottomPanelController;
 
   FocusNode _keyboardFocusNode = FocusNode();
 
@@ -148,6 +149,7 @@ class MainScreenState extends State<MainScreen> {
 
     _mainController = ResizableController();
     _editorController = ResizableController();
+    _bottomPanelController = ResizableController();
 
     // Initialize the sidebar views
     _leftSidebarViews.addAll([
@@ -166,6 +168,7 @@ class MainScreenState extends State<MainScreen> {
   void dispose() {
     _mainController.dispose();
     _editorController.dispose();
+    _bottomPanelController.dispose();
     _keyboardFocusNode.dispose(); // Dispose focus node
     super.dispose();
   }
@@ -415,50 +418,37 @@ class MainScreenState extends State<MainScreen> {
                             size: const ResizableSize.expand(),
                             child: ResizableContainer(
                               controller: _editorController,
-                              direction: Axis
-                                  .horizontal, // Split editor and right sidebar
+                              direction: Axis.horizontal,
                               children: [
-                                // Editor + Bottom Panel Column
+                                // Editor + Bottom Panel Vertical Split
                                 ResizableChild(
                                   size: const ResizableSize.expand(),
-                                  child: Column(
+                                  child: ResizableContainer(
+                                    controller: _bottomPanelController,
+                                    direction: Axis.vertical,
                                     children: [
-                                      // const EditorTabBar(), // Removed missing widget
-                                      const Expanded(
-                                        child:
-                                            CodeEditor(), // Ensure CodeEditor is imported/defined
+                                      // Editor Area
+                                      ResizableChild(
+                                        size: const ResizableSize.expand(),
+                                        child: const CodeEditor(),
                                       ),
-                                      // Bottom Panel (Conditional and Vertically Resizable)
+                                      // Bottom Panel (Conditional)
                                       if (_showBottomPanel)
-                                        const Flexible(
-                                          // Wrap ResizableContainer with Flexible
-                                          child: ResizableContainer(
-                                            direction: Axis.vertical,
-                                            // controller: _bottomPanelController, // Add if you need to control this specific resize
-                                            children: [
-                                              ResizableChild(
-                                                size: ResizableSize.ratio(0.25,
-                                                    min: 100),
-                                                // Remove invalid parameters from BottomTabPanel
-                                                child:
-                                                    BottomTabPanel(), // Ensure BottomTabPanel is imported
-                                              ),
-                                            ],
-                                          ),
+                                        ResizableChild(
+                                          size: const ResizableSize.ratio(0.25,
+                                              min: 100),
+                                          child: const BottomTabPanel(),
                                         ),
                                     ],
                                   ),
                                 ),
-
                                 // Right Sidebar (e.g., AI Pane)
                                 if (_showRightSidebar)
                                   ResizableChild(
                                     size: const ResizableSize.ratio(0.2,
                                         min: 150),
                                     child: IndexedStack(
-                                      // Use IndexedStack if multiple right panels possible
-                                      index:
-                                          0, // Assuming only one right sidebar view for now
+                                      index: 0,
                                       children: _rightSidebarViews,
                                     ),
                                   ),
