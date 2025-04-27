@@ -1,8 +1,11 @@
 import 'dart:ui';
 
+import 'package:codeforge/models/editor_state.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:highlight/languages/plaintext.dart' as LanguageNames
+    show plaintext;
 import 'package:provider/provider.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
@@ -31,6 +34,7 @@ class CodeEditorState extends State<CodeEditor> {
   };
 
   List<String> get _dropdownLanguages => _languageMap.keys.toList();
+  CodeController? _controller;
 
   final ScrollController _codeScrollController = ScrollController();
 
@@ -44,6 +48,55 @@ class CodeEditorState extends State<CodeEditor> {
     _codeScrollController.dispose();
     super.dispose();
   }
+
+  // void _updateController() {
+  //   final editorState = Provider.of<EditorState>(context);
+  //   if (editorState.currentDocument != _controller?.text) {
+  //     final language = detectLanguage(editorState.currentFilePath ?? '');
+  //     // Dispose previous controller if exists
+  //     // _controller?.dispose(); // Controller disposal is tricky with provider updates, manage carefully
+
+  //     // Create new controller
+  //     _controller = CodeController(
+  //       text: editorState.currentDocument ?? '',
+  //       language: language,
+  //       analyzer: CodeAnalyzer(
+  //           language: language ?? LanguageNames.plaintext), // Use analyzer
+  //     );
+
+  //     // Add listener to update EditorState on change
+  //     _controller?.addListener(() {
+  //       // Avoid recursive updates if the change originated from EditorState
+  //       if (editorState.currentDocument != _controller?.text) {
+  //         // Use a post-frame callback to avoid modifying state during build
+  //         WidgetsBinding.instance.addPostFrameCallback((_) {
+  //           if (mounted) {
+  //             // Check if the widget is still in the tree
+  //             // Consider debouncing this update if performance is an issue
+  //             // editorState.updateDocument(_controller?.text ?? '');
+  //           }
+  //         });
+  //       }
+  //     });
+
+  //     // Trigger a rebuild if the controller is new or significantly changed
+  //     // setState(() {}); // Might not be needed if Provider handles rebuilds
+  //   } else if (editorState.currentFilePath != null) {
+  //     // Update language if file path changes but content might be the same initially
+  //     final language = detectLanguage(editorState.currentFilePath!);
+  //     if (_controller?.language != language) {
+  //       // _controller?.language = language; // Controller properties might be final, recreate if needed
+  //       _controller = CodeController(
+  //         text: _controller?.text ?? '',
+  //         language: language,
+  //         analyzer: CodeAnalyzer(language: language ?? LanguageNames.plaintext),
+  //       );
+  //       // Re-add listener if controller is recreated
+  //       _controller?.addListener(() {/* ... listener logic ... */});
+  //       // setState(() {}); // Trigger rebuild
+  //     }
+  //   }
+  // }
 
   void _showEditorContextMenu(
       BuildContext context, Offset position, CodeController controller) async {
