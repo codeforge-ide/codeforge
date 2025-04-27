@@ -34,10 +34,13 @@ class _BottomTabPanelState extends State<BottomTabPanel> {
           height: 36,
           color: Theme.of(context).colorScheme.background.withOpacity(0.9),
           child: Row(
-            children: List.generate(_titles.length, (i) => _buildTab(i)),
+            children:
+                List.generate(_titles.length, (index) => _buildTab(index)),
           ),
         ),
-        Expanded(child: _views[_selectedIndex]),
+        Expanded(
+          child: _views[_selectedIndex],
+        ),
       ],
     );
   }
