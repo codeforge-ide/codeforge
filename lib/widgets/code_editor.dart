@@ -32,7 +32,7 @@ class CodeEditorState extends State<CodeEditor> {
 
   List<String> get _dropdownLanguages => _languageMap.keys.toList();
 
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _codeScrollController = ScrollController();
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class CodeEditorState extends State<CodeEditor> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _codeScrollController.dispose();
     super.dispose();
   }
 
@@ -179,6 +179,12 @@ class CodeEditorState extends State<CodeEditor> {
       ),
     );
 
+    final minimap = Minimap(
+      code: content,
+      scrollController: _codeScrollController,
+      lineCount: content.split('\n').length,
+    );
+
     return isMarkdown
         ? Row(
             key: ValueKey('md-$filePath'),
@@ -191,7 +197,16 @@ class CodeEditorState extends State<CodeEditor> {
               ),
             ],
           )
-        : codeField;
+        : Row(
+            children: [
+              Expanded(child: codeField),
+              VerticalDivider(width: 1),
+              SizedBox(
+                width: 64,
+                child: minimap,
+              ),
+            ],
+          );
   }
 }
 
@@ -200,4 +215,105 @@ class _ClampingScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) =>
       const ClampingScrollPhysics();
+}
+
+// Minimap widget implementation
+class Minimap extends StatefulWidget {
+  final String code;
+  final ScrollController scrollController;
+  final int lineCount;
+  const Minimap(
+      {super.key,
+      required this.code,
+      required this.scrollController,
+      required this.lineCount});
+
+  @override
+  State<Minimap> createState() => _MinimapState();
+}
+
+class _MinimapState extends State<Minimap> {
+  double? _dragStartY;
+  double? _initialScrollOffset;
+
+  void _onVerticalDragStart(DragStartDetails details) {
+    _dragStartY = details.localPosition.dy;
+    _initialScrollOffset = widget.scrollController.offset;
+  }
+
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (_dragStartY != null && _initialScrollOffset != null) {
+      final delta = details.localPosition.dy - _dragStartY!;
+      final scrollableHeight = widget.scrollController.position.maxScrollExtent;
+      final minimapHeight = context.size?.height ?? 1;
+      final scrollDelta = (delta / minimapHeight) * scrollableHeight;
+      widget.scrollController.jumpTo(
+          (_initialScrollOffset! + scrollDelta).clamp(0, scrollableHeight));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = widget.code.split('\n');
+    final minimapHeight =
+        MediaQuery.of(context).size.height - 60; // Adjust for padding/header
+    final lineHeight =
+        minimapHeight / (widget.lineCount > 0 ? widget.lineCount : 1);
+    final scrollExtent = widget.scrollController.position.hasContentDimensions
+        ? widget.scrollController.position.maxScrollExtent
+        : 1;
+    final viewportExtent = widget.scrollController.position.hasContentDimensions
+        ? widget.scrollController.position.viewportDimension
+        : 1;
+    final scrollOffset = widget.scrollController.hasClients
+        ? widget.scrollController.offset
+        : 0.0;
+    final viewportTop = (scrollOffset / (scrollExtent + 1e-5)) * minimapHeight;
+    final viewportHeightRect =
+        (viewportExtent / (scrollExtent + viewportExtent + 1e-5)) *
+            minimapHeight;
+
+    return GestureDetector(
+      onVerticalDragStart: _onVerticalDragStart,
+      onVerticalDragUpdate: _onVerticalDragUpdate,
+      child: Stack(
+        children: [
+          // Minimap lines
+          ListView.builder(
+            controller: widget.scrollController,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: lines.length,
+            itemBuilder: (context, i) {
+              return Container(
+                height: lineHeight.clamp(1.0, 4.0),
+                alignment: Alignment.centerLeft,
+                color: i % 2 == 0 ? Colors.grey[900] : Colors.grey[850],
+                child: Text(
+                  lines[i].length > 60
+                      ? lines[i].substring(0, 60) + '…'
+                      : lines[i],
+                  style: const TextStyle(fontSize: 6, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            },
+          ),
+          // Viewport rectangle
+          Positioned(
+            top: viewportTop,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: viewportHeightRect,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blueAccent, width: 1),
+                color: Colors.blueAccent.withOpacity(0.1),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
