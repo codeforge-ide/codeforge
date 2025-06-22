@@ -520,9 +520,9 @@ class MainScreenState extends State<MainScreen> {
     if (configFile != null) {
       // Use your tab manager/editor logic to open the file in the editor
       context.read<TabManagerService>().openTab(
-        configFile.path,
-        EditorState(), // Provide a new EditorState
-      );
+            configFile.path,
+            EditorState(), // Provide a new EditorState
+          );
     }
   }
 }
@@ -571,29 +571,29 @@ class _EditConfigDialogState extends State<EditConfigDialog> {
     );
   }
 }
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Edit ${widget.keyName}'),
-      content: TextField(
-        controller: _controller,
-        decoration: const InputDecoration(labelText: 'Value'),
+void dispose() {
+  _controller.dispose();
+  super.dispose();
+}
+
+@override
+Widget build(BuildContext context) {
+  return AlertDialog(
+    title: Text('Edit ${widget.keyName}'),
+    content: TextField(
+      controller: _controller,
+      decoration: const InputDecoration(labelText: 'Value'),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _controller.text),
-          child: const Text('Save'),
-        ),
-      ],
-    );
-  }
+      ElevatedButton(
+        onPressed: () => Navigator.pop(context, _controller.text),
+        child: const Text('Save'),
+      ),
+    ],
+  );
 }
