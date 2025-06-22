@@ -267,36 +267,7 @@ class MainScreenState extends State<MainScreen> {
         isDarkMode: Theme.of(context).brightness == Brightness.dark,
         isHighContrast: _isHighContrast,
         isUltraDark: _isUltraDark,
-        extraActions: [
-          ...configKeys.map((key) => CommandPaletteAction(
-                title: 'Edit CodeforgeAI Config: $key',
-                onSelected: () async {
-                  // Open a settings editor for this config key
-                  final newValue = await showDialog<String>(
-                    context: context,
-                    builder: (context) => EditConfigDialog(
-                      keyName: key,
-                      initialValue: config[key]?.toString() ?? '',
-                    ),
-                  );
-                  if (newValue != null) {
-                    // Update config in memory and persist to file
-                    config[key] = newValue;
-                    await codeforgeAIService.saveConfig(config);
-                    setState(() {}); // Refresh UI
-                  }
-                  setState(() => _showCommandPalette = false);
-                },
-              )),
-          CommandPaletteAction(
-            title: 'Open CodeforgeAI Settings',
-            onSelected: () {
-              // Open the full config in an editor tab
-              _openConfigEditor();
-              setState(() => _showCommandPalette = false);
-            },
-          ),
-        ],
+        // extraActions: [ ... ] // <-- REMOVE this argument
       );
     }
 
@@ -548,7 +519,10 @@ class MainScreenState extends State<MainScreen> {
     final configFile = await codeforgeAIService.getConfigFile();
     if (configFile != null) {
       // Use your tab manager/editor logic to open the file in the editor
-      context.read<TabManagerService>().openFile(configFile.path);
+      context.read<TabManagerService>().openTab(
+        configFile.path,
+        EditorState(), // Provide a new EditorState
+      );
     }
   }
 }
@@ -571,6 +545,32 @@ class _EditConfigDialogState extends State<EditConfigDialog> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit ${widget.keyName}'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(labelText: 'Value'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
   void dispose() {
     _controller.dispose();
     super.dispose();

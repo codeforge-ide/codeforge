@@ -13,7 +13,7 @@ class WorkspaceDropArea extends StatelessWidget {
     return DragTarget<List<String>>(
       onWillAcceptWithDetails: (data) => true,
       onAcceptWithDetails: (data) {
-        if (onDrop != null) onDrop!(data);
+        if (onDrop != null) onDrop!(data.data);
       },
       builder: (context, candidateData, rejectedData) {
         return child;
