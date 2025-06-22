@@ -250,7 +250,7 @@ class MainScreenState extends State<MainScreen> {
     if (_showCommandPalette) {
       final codeforgeAIService = context.read<CodeforgeAIService>();
       final config = codeforgeAIService.config ?? {};
-      final configKeys = config.keys.toList();
+      config.keys.toList();
       commandPaletteOverlay = CommandPalette(
         onToggleLightDark: () {
           _toggleLightDarkMode();
