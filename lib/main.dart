@@ -127,7 +127,7 @@ class MainScreenState extends State<MainScreen> {
   bool _showCommandPalette = false;
   bool _showSearchPanel = false;
   int _selectedLeftSidebarIndex = 0;
-  int _selectedBottomPanelIndex = 0;
+  final int _selectedBottomPanelIndex = 0;
   bool _showLeftSidebar = true;
   bool _showBottomPanel = true;
   bool _showRightSidebar = false;
@@ -141,7 +141,7 @@ class MainScreenState extends State<MainScreen> {
   late final ResizableController _editorController;
   late final ResizableController _bottomPanelController;
 
-  FocusNode _keyboardFocusNode = FocusNode();
+  final FocusNode _keyboardFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -403,7 +403,7 @@ class MainScreenState extends State<MainScreen> {
                                 // Use Material for background color
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .surfaceVariant, // Example color
+                                    .surfaceContainerHighest, // Example color
                                 child: Column(
                                   children: [
                                     const SizedBox(
@@ -461,16 +461,16 @@ class MainScreenState extends State<MainScreen> {
                                     direction: Axis.vertical,
                                     children: [
                                       // Editor Area
-                                      ResizableChild(
-                                        size: const ResizableSize.expand(),
-                                        child: const CodeEditor(),
+                                      const ResizableChild(
+                                        size: ResizableSize.expand(),
+                                        child: CodeEditor(),
                                       ),
                                       // Bottom Panel (Conditional)
                                       if (_showBottomPanel)
-                                        ResizableChild(
-                                          size: const ResizableSize.ratio(0.25,
+                                        const ResizableChild(
+                                          size: ResizableSize.ratio(0.25,
                                               min: 100),
-                                          child: const BottomTabPanel(),
+                                          child: BottomTabPanel(),
                                         ),
                                     ],
                                   ),

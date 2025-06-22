@@ -34,14 +34,14 @@ class CommandPalette extends StatelessWidget {
               onTap: onToggleLightDark,
             ),
             ListTile(
-              leading: Icon(Icons.contrast),
+              leading: const Icon(Icons.contrast),
               title: Text(isHighContrast
                   ? 'Disable High Contrast'
                   : 'Enable High Contrast'),
               onTap: onToggleHighContrast,
             ),
             ListTile(
-              leading: Icon(Icons.nightlight_round),
+              leading: const Icon(Icons.nightlight_round),
               title: Text(
                   isUltraDark ? 'Disable Ultra Dark' : 'Enable Ultra Dark'),
               onTap: onToggleUltraDark,

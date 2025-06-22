@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:codeforge/models/editor_state.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -182,7 +181,7 @@ class CodeEditorState extends State<CodeEditor> {
     );
 
     // Use a gutter with line numbers, errors, and folding handles
-    final gutterStyle = GutterStyle(
+    const gutterStyle = GutterStyle(
       showErrors: true,
       showFoldingHandles: true,
       showLineNumbers: true,
@@ -333,7 +332,9 @@ class _MinimapState extends State<Minimap> {
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     if (_dragStartY == null ||
         _initialScrollOffset == null ||
-        !widget.scrollController.hasClients) return;
+        !widget.scrollController.hasClients) {
+      return;
+    }
 
     final minimapHeight = context.size?.height;
     if (minimapHeight == null || minimapHeight <= 0) return;

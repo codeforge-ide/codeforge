@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
-import '../services/workspace_service.dart';
-import '../services/theme_service.dart';
-import '../services/tab_manager_service.dart';
-import '../services/codeforge_storage_service.dart';
 import '../widgets/file_explorer.dart';
 import '../widgets/source_control_pane.dart';
 import '../widgets/search_panel.dart';
@@ -27,12 +22,12 @@ class MainScreenState extends State<MainScreen> {
   bool _showCommandPalette = false;
   bool _showSearchPanel = false;
   int _selectedLeftSidebarIndex = 0;
-  int _selectedBottomPanelIndex = 0;
+  final int _selectedBottomPanelIndex = 0;
   bool _showLeftSidebar = true;
   bool _showBottomPanel = true;
   bool _showRightSidebar = false;
-  bool _isHighContrast = false;
-  bool _isUltraDark = false;
+  final bool _isHighContrast = false;
+  final bool _isUltraDark = false;
 
   final List<Widget> _leftSidebarViews = [];
   final List<Widget> _rightSidebarViews = [];
@@ -40,7 +35,7 @@ class MainScreenState extends State<MainScreen> {
   late final ResizableController _mainController;
   late final ResizableController _editorController;
 
-  FocusNode _keyboardFocusNode = FocusNode();
+  final FocusNode _keyboardFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -145,13 +140,13 @@ class MainScreenState extends State<MainScreen> {
                     // Primary sidebar
                     if (_showLeftSidebar)
                       ResizableChild(
-                        size: ResizableSize.pixels(48, min: 40, max: 80),
+                        size: const ResizableSize.pixels(48, min: 40, max: 80),
                         divider: ResizableDivider(
                             thickness: 3, color: Colors.grey[700]),
                         child: Material(
                           color: Theme.of(context)
                               .colorScheme
-                              .background
+                              .surface
                               .withOpacity(0.9),
                           child: Column(
                             children: [
@@ -191,32 +186,33 @@ class MainScreenState extends State<MainScreen> {
                     // Sidebar content
                     if (_showLeftSidebar)
                       ResizableChild(
-                        size: ResizableSize.ratio(0.2, min: 100, max: 400),
+                        size:
+                            const ResizableSize.ratio(0.2, min: 100, max: 400),
                         divider: ResizableDivider(
                             thickness: 3, color: Colors.grey[700]),
                         child: Container(
-                          color: Theme.of(context).colorScheme.background,
+                          color: Theme.of(context).colorScheme.surface,
                           child: _leftSidebarViews[_selectedLeftSidebarIndex],
                         ),
                       ),
 
                     // Main editor + right sidebar
                     ResizableChild(
-                      size: ResizableSize.expand(),
+                      size: const ResizableSize.expand(),
                       child: ResizableContainer(
                         controller: _editorController,
                         direction: Axis.horizontal,
                         children: [
                           // Editor area (with tab bar and bottom panel)
                           ResizableChild(
-                            size: ResizableSize.expand(),
+                            size: const ResizableSize.expand(),
                             divider: ResizableDivider(
                                 thickness: 3, color: Colors.grey[700]),
                             child: Column(
                               children: [
                                 const EditorTabBar(),
-                                Expanded(
-                                  child: const CodeEditor(),
+                                const Expanded(
+                                  child: CodeEditor(),
                                 ),
                                 if (_showBottomPanel)
                                   SizedBox(
@@ -230,8 +226,8 @@ class MainScreenState extends State<MainScreen> {
                           // Right sidebar
                           if (_showRightSidebar)
                             ResizableChild(
-                              size:
-                                  ResizableSize.pixels(300, min: 150, max: 500),
+                              size: const ResizableSize.pixels(300,
+                                  min: 150, max: 500),
                               child: _rightSidebarViews[0],
                             ),
                         ],
@@ -253,8 +249,8 @@ class MainScreenState extends State<MainScreen> {
             ? null
             : FloatingActionButton(
                 mini: true,
-                child: const Icon(Icons.code),
                 onPressed: _toggleRightSidebar,
+                child: const Icon(Icons.code),
               ),
 
         // Overlays

@@ -31,13 +31,16 @@ class LanguageUtils {
       default:
         // Try to detect from content if available
         if (content != null && content.isNotEmpty) {
-          if (content.startsWith('#!') && content.contains('python'))
+          if (content.startsWith('#!') && content.contains('python')) {
             return 'python';
+          }
           if (content.contains('import dart:')) return 'dart';
-          if (content.contains('function') || content.contains('console.log'))
+          if (content.contains('function') || content.contains('console.log')) {
             return 'javascript';
-          if (content.contains('def ') || content.contains('print('))
+          }
+          if (content.contains('def ') || content.contains('print(')) {
             return 'python';
+          }
         }
         return 'plaintext';
     }

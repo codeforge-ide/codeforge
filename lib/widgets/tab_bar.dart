@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/tab_manager_service.dart';
-import '../services/file_system_service.dart';
 import '../utils/language_utils.dart';
 
 class EditorTabBar extends StatelessWidget {

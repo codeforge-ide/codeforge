@@ -11,8 +11,8 @@ class WorkspaceDropArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DragTarget<List<String>>(
-      onWillAccept: (data) => true,
-      onAccept: (data) {
+      onWillAcceptWithDetails: (data) => true,
+      onAcceptWithDetails: (data) {
         if (onDrop != null) onDrop!(data);
       },
       builder: (context, candidateData, rejectedData) {

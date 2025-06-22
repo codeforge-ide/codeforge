@@ -108,7 +108,7 @@ class OutputPaneState extends State<OutputPane> {
         // Output toolbar
         Container(
           height: 36,
-          color: Theme.of(context).colorScheme.background.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [

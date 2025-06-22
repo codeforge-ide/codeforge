@@ -1,8 +1,6 @@
 import 'package:codeforge/widgets/buttons/buttonColors.dart';
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import '../utils/window_channel.dart';
 
 class TopMenuBar extends StatelessWidget {
   final void Function(String) onMenuSelected;
@@ -75,7 +73,7 @@ class TopMenuBar extends StatelessWidget {
                                   ),
                                 ),
                                 const Spacer(),
-                                Text(
+                                const Text(
                                   'Ctrl+Shift+P',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -154,7 +152,8 @@ class TopMenuBar extends StatelessWidget {
     return PopupMenuButton<String>(
       onSelected: onMenuSelected,
       itemBuilder: (context) => [
-        PopupMenuItem(value: '$label:dummy', child: Text('Coming soon...')),
+        PopupMenuItem(
+            value: '$label:dummy', child: const Text('Coming soon...')),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
