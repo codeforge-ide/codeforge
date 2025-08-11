@@ -40,14 +40,15 @@ class TerminalPaneState extends State<TerminalPane> {
 
     try {
       final workspaceService = context.read<WorkspaceService>();
-      final workspacePath = workspaceService.activeWorkspace;
+      String? workspacePath = workspaceService.activeWorkspace;
 
+      // Fallback to system home directory if no workspace is open
       if (workspacePath == null) {
-        setState(() {
-          _error = 'No workspace opened';
-          _isLoading = false;
-        });
-        return;
+        if (Platform.isWindows) {
+          workspacePath = Platform.environment['USERPROFILE'];
+        } else {
+          workspacePath = Platform.environment['HOME'];
+        }
       }
 
       // Use bash on Linux/macOS and cmd on Windows
@@ -64,6 +65,9 @@ class TerminalPaneState extends State<TerminalPane> {
       setState(() {
         _output.add('Welcome to CodeForge Terminal');
         _output.add('Current directory: $workspacePath');
+        if (workspaceService.activeWorkspace == null) {
+          _output.add('(No workspace open, using system home directory)');
+        }
         _output.add('');
       });
 
@@ -132,11 +136,14 @@ class TerminalPaneState extends State<TerminalPane> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surface;
+
     return Column(
       children: [
         // Terminal toolbar
         Container(
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+          color: surfaceColor, // Use theme color, no opacity
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
@@ -164,11 +171,11 @@ class TerminalPaneState extends State<TerminalPane> {
         // Error display if any
         if (_error != null)
           Container(
-            color: Theme.of(context).colorScheme.errorContainer,
+            color: theme.colorScheme.errorContainer,
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                Icon(Icons.error, color: Theme.of(context).colorScheme.error),
+                Icon(Icons.error, color: theme.colorScheme.error),
                 const SizedBox(width: 8),
                 Expanded(child: Text(_error!)),
                 IconButton(
@@ -182,46 +189,55 @@ class TerminalPaneState extends State<TerminalPane> {
         // Terminal view
         Expanded(
           child: Container(
-            color: Colors.black,
+            color: surfaceColor, // Use theme color for terminal background
             padding: const EdgeInsets.all(8.0),
             child: ListView.builder(
               controller: _scrollController,
               itemCount: _output.length,
               itemBuilder: (context, index) {
-                return Text(
-                  _output[index],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'monospace',
-                    fontSize: 14,
-                  ),
-                );
+                return SingleChildScrollView(
+  scrollDirection: Axis.horizontal,
+  child: Text(
+    _output[index],
+    style: TextStyle(
+      color: theme.brightness == Brightness.dark
+          ? Colors.white
+          : Colors.black,
+      fontFamily: 'monospace',
+      fontSize: 14,
+    ),
+    softWrap: false,
+    overflow: TextOverflow.visible,
+  ),
+);
               },
             ),
           ),
         ),
 
         // Input field
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              const Text('> ', style: TextStyle(fontWeight: FontWeight.bold)),
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
-                  style: const TextStyle(fontFamily: 'monospace'),
-                  onSubmitted: _sendCommand,
-                ),
-              ),
-            ],
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+  child: Row(
+    children: [
+      const Text('> ', style: TextStyle(fontWeight: FontWeight.bold)),
+      Expanded(
+        child: TextField(
+          controller: _controller,
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 2),
           ),
+          style: const TextStyle(fontFamily: 'monospace'),
+          onSubmitted: _sendCommand,
+          maxLines: 1,
+          textInputAction: TextInputAction.send,
         ),
-      ],
+      ),
+    ],
+  ),
+),      ],
     );
   }
 }

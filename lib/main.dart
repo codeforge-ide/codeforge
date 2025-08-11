@@ -43,6 +43,12 @@ void main(List<String> args) async {
     workspaceService.addWorkspace(path); // Use the service to add the workspace
     // Optionally, store it as a recent workspace
     await CodeforgeStorageService.addRecentWorkspace(path);
+  } else {
+    // No argument: try to open the most recent workspace
+    final recents = await CodeforgeStorageService.getRecentWorkspaces();
+    if (recents.isNotEmpty) {
+      workspaceService.addWorkspace(recents.first);
+    }
   }
 
   runApp(
