@@ -1,4 +1,4 @@
-# CodeForge TODO
+# CodeForge TODO plan
 
 **Goal:** Build a modular, performant, cross-platform code editor/IDE that surpasses VSCode in speed, extensibility, and user experience.
 
