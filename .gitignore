@@ -50,3 +50,5 @@ docx/
 .env*
 # Added by Autocommiter: ensure .docx/
 .docx/
+
+docxed/
